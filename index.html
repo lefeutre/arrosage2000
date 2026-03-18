@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Arrosage 2000 Smart</title>
+    <style>
+        /* --- Thèmes et Variables --- */
+        :root {
+            --bg-color: #080c16; --surface: #151e32; --surface-alt: rgba(255, 255, 255, 0.03);
+            --text-main: #f8fafc; --text-sec: #94a3b8; --primary: #0ea5e9; --primary-light: #38bdf8;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --border: rgba(255, 255, 255, 0.08); --nav-bg: rgba(8, 12, 22, 0.85); --radius: 20px;
+        }
+
+        .light-theme {
+            --bg-color: #f1f5f9; --surface: #ffffff; --surface-alt: rgba(0, 0, 0, 0.02);
+            --text-main: #0f172a; --text-sec: #64748b; --border: rgba(0, 0, 0, 0.08);
+            --nav-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; justify-content: center; transition: background-color 0.3s; }
+        .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
+        header { padding: max(20px, env(safe-area-inset-top)) 20px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 1.4rem; font-weight: 800; background: linear-gradient(90deg, var(--primary-light), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .view { display: none; padding: 0 15px 15px; animation: fadeUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+
+        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card h3 { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+
+        /* --- Météo Widget --- */
+        .weather-widget { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .weather-icon { font-size: 2rem; }
+        .weather-info { flex: 1; }
+        .weather-info strong { display: block; font-size: 0.95rem; }
+        .weather-info span { font-size: 0.8rem; color: var(--text-sec); }
+
+        /* --- Cuve --- */
+        .tank-container { text-align: center; }
+        .tank-mini { width: 100px; height: 160px; border: 4px solid var(--border); border-radius: 12px 12px 24px 24px; margin: 0 auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.1); }
+        .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s; }
+        .water-mini::after { content: ''; position: absolute; top: -5px; left: -20px; right: -20px; height: 10px; background: rgba(255,255,255,0.25); border-radius: 50%; animation: wave 3s ease-in-out infinite alternate; }
+        @keyframes wave { 0% { transform: translate3d(-5px, 2px, 0); } 100% { transform: translate3d(5px, -2px, 0); } }
+        .tank-val { margin-top: 15px; font-weight: 800; font-size: 1.8rem; }
+        .tank-max { font-size: 0.85rem; color: var(--text-sec); }
+
+        /* --- Switch --- */
+        .switch-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+        .switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(150,150,150,0.2); border-radius: 30px; transition: .3s; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: #fff; border-radius: 50%; transition: transform .3s; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translate3d(22px, 0, 0); }
+
+        /* --- Formulaires --- */
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
+        input[type="time"], input[type="number"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary-light); }
+        
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
+        .day-checkbox { display: none; }
+        .day-label { height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surface-alt); color: var(--text-sec); font-weight: 600; font-size: 0.85rem; border: 1px solid transparent; transition: 0.2s; }
+        .day-checkbox:checked + .day-label { background: rgba(14, 165, 233, 0.15); color: var(--primary-light); border-color: var(--primary); }
+
+        .btn { width: 100%; height: 50px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.97); }
+
+        /* --- Liste Logs & Plans --- */
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+        .log-date { font-size: 0.8rem; color: var(--text-sec); margin-bottom: 2px; }
+        .log-action { font-size: 0.9rem; font-weight: 600; }
+
+        /* --- Navigation Basse --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); z-index: 1000; }
+        .nav-item { width: 60px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; color: var(--text-sec); background: none; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;}
+        .nav-item.active { color: var(--primary-light); }
+        .nav-icon { font-size: 1.3rem; transition: transform 0.2s; }
+        .nav-item.active .nav-icon { transform: translateY(-2px); }
+
+        #toast { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); left: 50%; transform: translate3d(-50%, 20px, 0); opacity: 0; background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.9rem; pointer-events: none; transition: all 0.3s; z-index: 2000; }
+        #toast.show { transform: translate3d(-50%, 0, 0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <div class="header-title">Arrosage 2000</div>
+            <div id="connexion-badge" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600;">● Connexion DB...</div>
+        </header>
+
+        <main id="view-home" class="view active">
+            <section class="card" style="padding: 15px;">
+                <div class="weather-widget">
+                    <div class="weather-icon" id="weather-icon">🌤️</div>
+                    <div class="weather-info">
+                        <strong>Météo Locale</strong>
+                        <span id="weather-desc">Temps sec. Arrosage pertinent.</span>
+                    </div>
+                </div>
+                <div class="switch-row" style="min-height: auto;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-sec);">Désactiver si pluie annoncée</span>
+                    <label class="switch" style="transform: scale(0.85); transform-origin: right;">
+                        <input type="checkbox" id="smart-weather-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="card tank-container">
+                <h3>💧 Réserve d'Eau</h3>
+                <div class="tank-mini">
+                    <div class="water-mini" id="water-level" style="height: 0%;"></div>
+                </div>
+                <div class="tank-val"><span id="volume-val">--</span> L</div>
+                <div class="tank-max">Capacité paramétrée : <span id="display-max-tank">50</span> L</div>
+            </section>
+
+            <section class="card">
+                <h3>⚙️ Contrôle Manuel</h3>
+                <div class="switch-row">
+                    <span style="font-weight: 600;" id="pump-txt">Chargement...</span>
+                    <label class="switch">
+                        <input type="checkbox" id="pump-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </section>
+        </main>
+
+        <main id="view-plan" class="view">
+            <section class="card">
+                <h3>Nouveau Programme</h3>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Heure de départ</label>
+                        <input type="time" id="time-in" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Durée (min)</label>
+                        <input type="number" id="dur-in" placeholder="Ex: 15" min="1" required>
+                    </div>
+                </div>
+                <div class="days-grid">
+                    <label><input type="checkbox" class="day-checkbox" value="Lu"><div class="day-label">Lu</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Ma"><div class="day-label">Ma</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Me"><div class="day-label">Me</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Je"><div class="day-label">Je</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Ve"><div class="day-label">Ve</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Sa"><div class="day-label">Sa</div></label>
+                    <label><input type="checkbox" class="day-checkbox" value="Di"><div class="day-label">Di</div></label>
+                </div>
+                <button class="btn" id="btn-save-plan">Ajouter au Planning</button>
+            </section>
+            
+            <section class="card">
+                <h3>Programmes Actifs</h3>
+                <div id="plan-list-container"></div>
+            </section>
+        </main>
+
+        <main id="view-stats" class="view">
+            <section class="card">
+                <h3>Historique Récent</h3>
+                <div id="logs-container">
+                    <div class="list-item">
+                        <div>
+                            <div class="log-date">17 Mars - 14:00</div>
+                            <div class="log-action" style="color: var(--success);">Arrosage manuel (5 min)</div>
+                        </div>
+                    </div>
+                    </div>
+            </section>
+        </main>
+
+        <main id="view-settings" class="view">
+            <section class="card">
+                <h3>Configuration Matérielle</h3>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Volume maximal de la cuve (Litres)</label>
+                    <input type="number" id="setting-tank-max" value="50">
+                </div>
+                <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder le volume</button>
+            </section>
+
+            <section class="card">
+                <h3>Préférences</h3>
+                <div class="switch-row">
+                    <span style="font-weight: 600;">Thème Clair</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="view-home"><div class="nav-icon">🏠</div>Accueil</button>
+            <button class="nav-item" data-target="view-plan"><div class="nav-icon">📅</div>Planning</button>
+            <button class="nav-item" data-target="view-stats"><div class="nav-icon">📋</div>Journal</button>
+            <button class="nav-item" data-target="view-settings"><div class="nav-icon">⚙️</div>Réglages</button>
+        </nav>
+
+        <div id="toast">Message</div>
+    </div>
+
+    <script>
+        const AppState = {
+            waterMax: 50,
+            waterCurrent: 0,
+            schedules: []
+        };
+
+        const DOM = {
+            toast: document.getElementById('toast'),
+            waterLevel: document.getElementById('water-level'),
+            volumeVal: document.getElementById('volume-val'),
+            displayMaxTank: document.getElementById('display-max-tank'),
+            inputTankMax: document.getElementById('setting-tank-max'),
+            pumpToggle: document.getElementById('pump-toggle'),
+            pumpTxt: document.getElementById('pump-txt'),
+            badge: document.getElementById('connexion-badge'),
+            navItems: document.querySelectorAll('.nav-item'),
+            views: document.querySelectorAll('.view'),
+            planList: document.getElementById('plan-list-container')
+        };
+
+        let toastTimeout;
+        function showToast(msg) {
+            DOM.toast.textContent = msg;
+            DOM.toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => DOM.toast.classList.remove('show'), 2500);
+        }
+
+        // Navigation
+        DOM.navItems.forEach(btn => {
+            btn.addEventListener('click', () => {
+                DOM.navItems.forEach(b => b.classList.remove('active'));
+                DOM.views.forEach(v => v.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.target).classList.add('active');
+            });
+        });
+
+        // Gestion Cuve & Paramètres
+        function updateWater(liters) {
+            AppState.waterCurrent = Math.max(0, Math.min(liters, AppState.waterMax));
+            const pct = (AppState.waterCurrent / AppState.waterMax) * 100;
+            DOM.waterLevel.style.height = `${pct}%`;
+            DOM.volumeVal.textContent = AppState.waterCurrent.toFixed(1);
+        }
+
+        document.getElementById('btn-save-settings').addEventListener('click', () => {
+            const newMax = parseInt(DOM.inputTankMax.value);
+            if(newMax > 0) {
+                AppState.waterMax = newMax;
+                DOM.displayMaxTank.textContent = newMax;
+                updateWater(AppState.waterCurrent); // Recalcule le pourcentage
+                showToast("Capacité de la cuve mise à jour");
+            }
+        });
+
+        // --- CONNEXION NEON DB (LECTURE) ---
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch('/.netlify/functions/get-status');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Mise à jour de l'eau
+                    updateWater(parseFloat(data.volume_eau));
+                    
+                    // Mise à jour du bouton pompe (uniquement s'il y a un changement externe)
+                    if (DOM.pumpToggle.checked !== data.pompe_etat) {
+                        DOM.pumpToggle.checked = data.pompe_etat;
+                        DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Pompe Arrêtée";
+                        DOM.pumpTxt.style.color = data.pompe_etat ? "var(--primary-light)" : "var(--text-main)";
+                    }
+
+                    DOM.badge.textContent = "● Connecté";
+                    DOM.badge.style.color = "var(--success)";
+                }
+            } catch (error) {
+                console.error("Erreur de connexion:", error);
+                DOM.badge.textContent = "● Hors ligne";
+                DOM.badge.style.color = "var(--danger)";
+            }
+        }
+
+        // --- ENVOI DE COMMANDE NEON DB (ECRITURE) ---
+        DOM.pumpToggle.addEventListener('change', async (e) => {
+            const active = e.target.checked;
+            
+            // Changement visuel immédiat pour l'utilisateur
+            DOM.pumpTxt.textContent = active ? "Démarrage..." : "Arrêt...";
+            DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
+
+            try {
+                const response = await fetch('/.netlify/functions/update-pump', {
+                    method: 'POST',
+                    body: JSON.stringify({ pompe_etat: active })
+                });
+
+                if (response.ok) {
+                    DOM.pumpTxt.textContent = active ? "Pompe en marche" : "Pompe Arrêtée";
+                    showToast(active ? "Pompe activée" : "Pompe arrêtée");
+                } else {
+                    showToast("Erreur lors de l'envoi");
+                }
+            } catch (error) {
+                showToast("Erreur réseau");
+                DOM.badge.textContent = "● Hors ligne";
+                DOM.badge.style.color = "var(--danger)";
+            }
+        });
+
+        // Programmes
+        function renderSchedules() {
+            DOM.planList.innerHTML = '';
+            if (AppState.schedules.length === 0) {
+                DOM.planList.innerHTML = '<div style="text-align:center; padding: 15px; color: var(--text-sec);">Aucun programme.</div>';
+                return;
+            }
+            AppState.schedules.forEach((plan, idx) => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div>
+                        <div style="color:var(--primary-light); font-weight:700;">${plan.days.join(', ')}</div>
+                        <div style="font-size:0.9rem;">À ${plan.time} pendant ${plan.duration} min</div>
+                    </div>
+                    <button class="btn-del" data-index="${idx}" style="background:none; border:none; color:var(--danger); font-size:1.2rem; padding:10px;">✖</button>
+                `;
+                DOM.planList.appendChild(div);
+            });
+
+            document.querySelectorAll('.btn-del').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    AppState.schedules.splice(e.currentTarget.dataset.index, 1);
+                    renderSchedules();
+                    showToast("Programme supprimé");
+                });
+            });
+        }
+
+        document.getElementById('btn-save-plan').addEventListener('click', () => {
+            const time = document.getElementById('time-in').value;
+            const duration = document.getElementById('dur-in').value;
+            const days = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => cb.value);
+
+            if (!time || !duration || days.length === 0) return showToast("Informations incomplètes");
+
+            AppState.schedules.push({ time, duration, days });
+            renderSchedules();
+            showToast("Programme ajouté");
+            
+            // Reset formulaire
+            document.querySelectorAll('.day-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('time-in').value = '';
+            document.getElementById('dur-in').value = '';
+        });
+
+        document.getElementById('theme-toggle').addEventListener('change', (e) => {
+            if (e.target.checked) document.body.classList.add('light-theme');
+            else document.body.classList.remove('light-theme');
+        });
+
+        // Init
+        window.onload = () => {
+            renderSchedules();
+            fetchSystemStatus(); // Première lecture de la BDD
+            setInterval(fetchSystemStatus, 3000); // Mise à jour toutes les 3s
+        };
+    </script>
+</body>
+</html>
