@@ -62,7 +62,7 @@
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
-        input[type="time"], input[type="number"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        input[type="time"], input[type="number"], input[type="text"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
         input:focus { border-color: var(--primary-light); }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
@@ -102,8 +102,8 @@
                 <div class="weather-widget">
                     <div class="weather-icon" id="weather-icon">🌤️</div>
                     <div class="weather-info">
-                        <strong>Météo Locale</strong>
-                        <span id="weather-desc">Temps sec. Arrosage pertinent.</span>
+                        <strong>Météo : <span id="weather-city-display">Chargement...</span></strong>
+                        <span id="weather-desc">Recherche des données...</span>
                     </div>
                 </div>
                 <div class="switch-row" style="min-height: auto;">
@@ -185,10 +185,14 @@
             <section class="card">
                 <h3>Configuration Matérielle</h3>
                 <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Ville pour la météo</label>
+                    <input type="text" id="setting-city" value="Molsheim">
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
                     <label>Volume maximal de la cuve (Litres)</label>
                     <input type="number" id="setting-tank-max" value="50">
                 </div>
-                <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder le volume</button>
+                <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder les réglages</button>
             </section>
 
             <section class="card">
@@ -260,14 +264,72 @@
             DOM.volumeVal.textContent = AppState.waterCurrent.toFixed(1);
         }
 
+        // --- GESTION MÉTÉO ---
+        let currentCity = localStorage.getItem('arrosage_city') || 'Molsheim';
+
+        async function fetchWeather() {
+            try {
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${currentCity}&count=1&language=fr`);
+                const geoData = await geoRes.json();
+                
+                if (!geoData.results || geoData.results.length === 0) {
+                    document.getElementById('weather-desc').textContent = "Ville non trouvée.";
+                    return;
+                }
+                
+                const lat = geoData.results[0].latitude;
+                const lon = geoData.results[0].longitude;
+                const cityName = geoData.results[0].name;
+                
+                document.getElementById('weather-city-display').textContent = cityName;
+                document.getElementById('setting-city').value = cityName;
+
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                const weatherData = await weatherRes.json();
+                
+                const temp = weatherData.current_weather.temperature;
+                const code = weatherData.current_weather.weathercode;
+                
+                let icon = "🌤️";
+                let desc = "Temps sec";
+                let action = "Arrosage recommandé";
+
+                if (code === 0) { icon = "☀️"; desc = "Ciel dégagé"; }
+                else if (code >= 1 && code <= 3) { icon = "⛅"; desc = "Nuageux"; }
+                else if (code >= 51 && code <= 67) { icon = "🌧️"; desc = "Pluie"; action = "Arrosage inutile"; }
+                else if (code >= 71 && code <= 77) { icon = "❄️"; desc = "Neige"; action = "Arrosage désactivé"; }
+                else if (code >= 80 && code <= 82) { icon = "🌦️"; desc = "Averses"; action = "Pluie prévue"; }
+                else if (code >= 95) { icon = "⛈️"; desc = "Orage"; action = "Arrosage désactivé"; }
+
+                document.getElementById('weather-icon').textContent = icon;
+                document.getElementById('weather-desc').textContent = `${temp}°C - ${desc}. ${action}.`;
+
+                if (code >= 51) {
+                    document.getElementById('smart-weather-toggle').checked = true;
+                }
+
+            } catch (error) {
+                console.error("Erreur météo:", error);
+                document.getElementById('weather-desc').textContent = "Erreur de réseau météo.";
+            }
+        }
+
         document.getElementById('btn-save-settings').addEventListener('click', () => {
             const newMax = parseInt(DOM.inputTankMax.value);
             if(newMax > 0) {
                 AppState.waterMax = newMax;
                 DOM.displayMaxTank.textContent = newMax;
-                updateWater(AppState.waterCurrent); // Recalcule le pourcentage
-                showToast("Capacité de la cuve mise à jour");
+                updateWater(AppState.waterCurrent);
             }
+
+            const newCity = document.getElementById('setting-city').value;
+            if (newCity && newCity.trim() !== "") {
+                currentCity = newCity.trim();
+                localStorage.setItem('arrosage_city', currentCity);
+                fetchWeather(); 
+            }
+
+            showToast("Réglages sauvegardés");
         });
 
         // --- CONNEXION NEON DB (LECTURE) ---
@@ -277,10 +339,8 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Mise à jour de l'eau
                     updateWater(parseFloat(data.volume_eau));
                     
-                    // Mise à jour du bouton pompe (uniquement s'il y a un changement externe)
                     if (DOM.pumpToggle.checked !== data.pompe_etat) {
                         DOM.pumpToggle.checked = data.pompe_etat;
                         DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Pompe Arrêtée";
@@ -301,7 +361,6 @@
         DOM.pumpToggle.addEventListener('change', async (e) => {
             const active = e.target.checked;
             
-            // Changement visuel immédiat pour l'utilisateur
             DOM.pumpTxt.textContent = active ? "Démarrage..." : "Arrêt...";
             DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
 
@@ -364,7 +423,6 @@
             renderSchedules();
             showToast("Programme ajouté");
             
-            // Reset formulaire
             document.querySelectorAll('.day-checkbox').forEach(cb => cb.checked = false);
             document.getElementById('time-in').value = '';
             document.getElementById('dur-in').value = '';
@@ -378,8 +436,9 @@
         // Init
         window.onload = () => {
             renderSchedules();
-            fetchSystemStatus(); // Première lecture de la BDD
-            setInterval(fetchSystemStatus, 3000); // Mise à jour toutes les 3s
+            fetchWeather();
+            fetchSystemStatus(); 
+            setInterval(fetchSystemStatus, 3000);
         };
     </script>
 </body>
