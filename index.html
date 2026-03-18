@@ -23,8 +23,11 @@
 
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; justify-content: center; transition: background-color 0.3s; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* CORRECTION DRAPEAU CSS (Même sur Windows) */
         header { padding: max(20px, env(safe-area-inset-top)) 20px 15px; display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-size: 1.4rem; font-weight: 800; background: linear-gradient(90deg, var(--primary-light), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-title { font-size: 1.4rem; font-weight: 800; background: linear-gradient(90deg, var(--primary-light), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px;}
+        .french-flag { display: inline-block; width: 22px; height: 15px; background: linear-gradient(90deg, #002395 33.33%, #ffffff 33.33%, #ffffff 66.66%, #ed2939 66.66%); border-radius: 2px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
         
         .view { display: none; padding: 0 15px 15px; animation: fadeUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .view.active { display: block; }
@@ -43,7 +46,7 @@
         /* --- Cuve --- */
         .tank-container { text-align: center; }
         .tank-mini { width: 100px; height: 160px; border: 4px solid var(--border); border-radius: 12px 12px 24px 24px; margin: 0 auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.1); }
-        .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s; }
+        .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s, background 0.5s; }
         .water-mini::after { content: ''; position: absolute; top: -5px; left: -20px; right: -20px; height: 10px; background: rgba(255,255,255,0.25); border-radius: 50%; animation: wave 3s ease-in-out infinite alternate; }
         @keyframes wave { 0% { transform: translate3d(-5px, 2px, 0); } 100% { transform: translate3d(5px, -2px, 0); } }
         .tank-val { margin-top: 15px; font-weight: 800; font-size: 1.8rem; }
@@ -62,7 +65,7 @@
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
-        input[type="time"], input[type="number"], input[type="text"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        input[type="time"], input[type="number"], input[type="text"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
         input:focus { border-color: var(--primary-light); }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
@@ -72,6 +75,8 @@
 
         .btn { width: 100%; height: 50px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
         .btn:active { transform: scale(0.97); }
+        .btn-outline { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:active { background: var(--border); }
 
         /* --- Liste Logs & Plans --- */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
@@ -93,7 +98,7 @@
 
     <div class="app-container">
         <header>
-            <div class="header-title">Arrosage 2000</div>
+            <div class="header-title">Arrosage 2000 <span class="french-flag"></span></div>
             <div id="connexion-badge" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600;">● Connexion DB...</div>
         </header>
 
@@ -121,17 +126,31 @@
                     <div class="water-mini" id="water-level" style="height: 0%;"></div>
                 </div>
                 <div class="tank-val"><span id="volume-val">--</span> L</div>
-                <div class="tank-max">Capacité paramétrée : <span id="display-max-tank">50</span> L</div>
+                <div class="tank-max">Capacité : <span id="display-max-tank">50</span> L</div>
+                <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 10px;">Dernière synchro : <span id="last-sync-time">--:--</span></div>
             </section>
 
             <section class="card">
                 <h3>⚙️ Contrôle Manuel</h3>
                 <div class="switch-row">
-                    <span style="font-weight: 600;" id="pump-txt">Chargement...</span>
+                    <span style="font-weight: 600;" id="pump-txt">Connexion en cours...</span>
                     <label class="switch">
                         <input type="checkbox" id="pump-toggle">
                         <span class="slider"></span>
                     </label>
+                </div>
+                
+                <div class="switch-row" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-sec);">Mode Éco (Impulsions)</span>
+                    <label class="switch" style="transform: scale(0.85); transform-origin: right;">
+                        <input type="checkbox" id="eco-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-outline" id="btn-boost-5" style="height: 40px; font-size: 0.85rem;">⏱️ Minuteur 5 min</button>
+                    <button class="btn btn-outline" id="btn-boost-15" style="height: 40px; font-size: 0.85rem;">⏱️ Minuteur 15 min</button>
                 </div>
             </section>
         </main>
@@ -192,6 +211,14 @@
                     <label>Volume maximal de la cuve (Litres)</label>
                     <input type="number" id="setting-tank-max" value="50">
                 </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Type de plantation</label>
+                    <select id="setting-plant-type">
+                        <option value="gazon">Gazon (Besoins normaux)</option>
+                        <option value="potager">Potager (Besoins élevés)</option>
+                        <option value="massif">Massif floral (Besoins modérés)</option>
+                    </select>
+                </div>
                 <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder les réglages</button>
             </section>
 
@@ -218,10 +245,11 @@
     </div>
 
     <script>
+        // CORRECTION : Restauration des programmes sauvegardés au chargement
         const AppState = {
             waterMax: 50,
             waterCurrent: 0,
-            schedules: []
+            schedules: JSON.parse(localStorage.getItem('arrosage_schedules')) || []
         };
 
         const DOM = {
@@ -235,7 +263,12 @@
             badge: document.getElementById('connexion-badge'),
             navItems: document.querySelectorAll('.nav-item'),
             views: document.querySelectorAll('.view'),
-            planList: document.getElementById('plan-list-container')
+            planList: document.getElementById('plan-list-container'),
+            btnBoost5: document.getElementById('btn-boost-5'),
+            btnBoost15: document.getElementById('btn-boost-15'),
+            lastSyncTime: document.getElementById('last-sync-time'),
+            plantType: document.getElementById('setting-plant-type'),
+            ecoToggle: document.getElementById('eco-mode-toggle')
         };
 
         let toastTimeout;
@@ -256,19 +289,35 @@
             });
         });
 
-        // Gestion Cuve & Paramètres
+        // Gestion Cuve & Alerte Rouge
         function updateWater(liters) {
             AppState.waterCurrent = Math.max(0, Math.min(liters, AppState.waterMax));
             const pct = (AppState.waterCurrent / AppState.waterMax) * 100;
             DOM.waterLevel.style.height = `${pct}%`;
             DOM.volumeVal.textContent = AppState.waterCurrent.toFixed(1);
+
+            if (pct <= 15) {
+                DOM.waterLevel.style.background = "linear-gradient(180deg, #ef4444, #b91c1c)"; // Rouge alerte
+            } else {
+                DOM.waterLevel.style.background = "linear-gradient(180deg, var(--primary-light), var(--primary))"; // Bleu normal
+            }
         }
 
         // --- GESTION MÉTÉO ---
         let currentCity = localStorage.getItem('arrosage_city') || 'Molsheim';
-        
-        // Initialiser l'input avec la valeur sauvegardée
         document.getElementById('setting-city').value = currentCity;
+
+        // --- RESTAURATION DES REGLAGES ---
+        let currentPlantType = localStorage.getItem('arrosage_plant') || 'gazon';
+        DOM.plantType.value = currentPlantType;
+        
+        let ecoModeActive = localStorage.getItem('arrosage_eco') === 'true';
+        DOM.ecoToggle.checked = ecoModeActive;
+
+        DOM.ecoToggle.addEventListener('change', (e) => {
+            localStorage.setItem('arrosage_eco', e.target.checked);
+            showToast(e.target.checked ? "Mode Éco activé" : "Mode Éco désactivé");
+        });
 
         async function fetchWeather() {
             try {
@@ -307,10 +356,6 @@
                 document.getElementById('weather-icon').textContent = icon;
                 document.getElementById('weather-desc').textContent = `${temp}°C - ${desc}. ${action}.`;
 
-                if (code >= 51) {
-                    document.getElementById('smart-weather-toggle').checked = true;
-                }
-
             } catch (error) {
                 console.error("Erreur météo:", error);
                 document.getElementById('weather-desc').textContent = "Erreur de réseau météo.";
@@ -332,10 +377,25 @@
                 fetchWeather(); 
             }
 
+            const newPlantType = DOM.plantType.value;
+            localStorage.setItem('arrosage_plant', newPlantType);
+
             showToast("Réglages sauvegardés");
         });
 
-        // --- CONNEXION NEON DB (LECTURE) ---
+        // --- CONNEXION NEON DB (API) ---
+        async function sendPumpCommand(state) {
+            try {
+                const response = await fetch('/.netlify/functions/update-pump', {
+                    method: 'POST',
+                    body: JSON.stringify({ pompe_etat: state })
+                });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
         async function fetchSystemStatus() {
             try {
                 const response = await fetch('/.netlify/functions/get-status');
@@ -350,41 +410,64 @@
 
                     DOM.badge.textContent = "● Connecté";
                     DOM.badge.style.color = "var(--success)";
+                    
+                    const now = new Date();
+                    DOM.lastSyncTime.textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 }
             } catch (error) {
+                // CORRECTION : Affichage d'un statut "Hors ligne" explicite au lieu d'un chargement infini
                 console.error("Erreur de connexion:", error);
+                DOM.pumpTxt.textContent = "Pompe Arrêtée (Hors ligne)";
                 DOM.badge.textContent = "● Hors ligne";
                 DOM.badge.style.color = "var(--danger)";
             }
         }
 
-        // --- ENVOI DE COMMANDE NEON DB (ECRITURE) ---
+        // Contrôle manuel switch
         DOM.pumpToggle.addEventListener('change', async (e) => {
             const active = e.target.checked;
-            
             DOM.pumpTxt.textContent = active ? "Démarrage..." : "Arrêt...";
             DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
 
-            try {
-                const response = await fetch('/.netlify/functions/update-pump', {
-                    method: 'POST',
-                    body: JSON.stringify({ pompe_etat: active })
-                });
-
-                if (response.ok) {
-                    DOM.pumpTxt.textContent = active ? "Pompe en marche" : "Pompe Arrêtée";
-                    showToast(active ? "Pompe activée" : "Pompe arrêtée");
-                } else {
-                    showToast("Erreur lors de l'envoi");
-                }
-            } catch (error) {
-                showToast("Erreur réseau");
-                DOM.badge.textContent = "● Hors ligne";
-                DOM.badge.style.color = "var(--danger)";
+            const success = await sendPumpCommand(active);
+            if (success) {
+                DOM.pumpTxt.textContent = active ? "Pompe en marche" : "Pompe Arrêtée";
+                showToast(active ? "Pompe activée" : "Pompe arrêtée");
+            } else {
+                showToast("Erreur lors de l'envoi");
             }
         });
 
-        // Programmes
+        // Fonction Boost (Arrosage Minuté)
+        let boostTimer = null;
+        async function startBoost(minutes) {
+            const success = await sendPumpCommand(true);
+            if (!success) {
+                showToast("Erreur de communication avec le serveur.");
+                return;
+            }
+            
+            showToast(`Arrosage lancé pour ${minutes} minutes`);
+            DOM.pumpToggle.checked = true;
+            DOM.pumpTxt.textContent = `Minuteur en cours (${minutes}m)`;
+            DOM.pumpTxt.style.color = "var(--primary-light)";
+
+            clearTimeout(boostTimer);
+            boostTimer = setTimeout(async () => {
+                const stopSuccess = await sendPumpCommand(false);
+                if (stopSuccess) {
+                    DOM.pumpToggle.checked = false;
+                    DOM.pumpTxt.textContent = "Pompe Arrêtée";
+                    DOM.pumpTxt.style.color = "var(--text-main)";
+                    showToast("Fin de l'arrosage minuté.");
+                }
+            }, minutes * 60 * 1000); 
+        }
+
+        DOM.btnBoost5.addEventListener('click', () => startBoost(5));
+        DOM.btnBoost15.addEventListener('click', () => startBoost(15));
+
+        // --- GESTION DES PROGRAMMES ---
         function renderSchedules() {
             DOM.planList.innerHTML = '';
             if (AppState.schedules.length === 0) {
@@ -404,9 +487,11 @@
                 DOM.planList.appendChild(div);
             });
 
+            // CORRECTION : Sauvegarde après suppression
             document.querySelectorAll('.btn-del').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     AppState.schedules.splice(e.currentTarget.dataset.index, 1);
+                    localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules)); // Sauvegarde locale
                     renderSchedules();
                     showToast("Programme supprimé");
                 });
@@ -421,6 +506,8 @@
             if (!time || !duration || days.length === 0) return showToast("Informations incomplètes");
 
             AppState.schedules.push({ time, duration, days });
+            localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules)); // Sauvegarde locale
+            
             renderSchedules();
             showToast("Programme ajouté");
             
@@ -429,17 +516,42 @@
             document.getElementById('dur-in').value = '';
         });
 
+        // --- NOUVEAU : VÉRIFICATION AUTOMATIQUE DES HORAIRES (V6) ---
+        function checkAutomatedSchedules() {
+            const now = new Date();
+            const daysMapping = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
+            const currentDayStr = daysMapping[now.getDay()];
+            // On récupère l'heure au format HH:MM
+            const currentTimeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', ':');
+
+            AppState.schedules.forEach(plan => {
+                // Si le jour et l'heure correspondent
+                if (plan.days.includes(currentDayStr) && plan.time === currentTimeStr) {
+                    // On s'assure de ne pas le déclencher en boucle pendant la même minute
+                    if (!plan.lastTriggered || plan.lastTriggered !== currentTimeStr) {
+                        plan.lastTriggered = currentTimeStr;
+                        // On lance l'arrosage pour la durée prévue
+                        startBoost(parseInt(plan.duration));
+                    }
+                }
+            });
+        }
+
         document.getElementById('theme-toggle').addEventListener('change', (e) => {
             if (e.target.checked) document.body.classList.add('light-theme');
             else document.body.classList.remove('light-theme');
         });
 
-        // Init
+        // CORRECTION DE L'INITIALISATION : Parallélisation des appels pour éviter le blocage
         window.onload = () => {
-            renderSchedules();
-            fetchWeather();
-            fetchSystemStatus(); 
-            setInterval(fetchSystemStatus, 3000);
+            renderSchedules(); // Charge l'interface locale tout de suite
+            fetchWeather(); // Lance la météo sans bloquer le reste
+            
+            fetchSystemStatus(); // Première tentative de connexion Neon
+            
+            // CORRECTION DES BOUCLES : Vérification de l'horloge plus fréquente (30s)
+            setInterval(fetchSystemStatus, 3000); 
+            setInterval(checkAutomatedSchedules, 30000); // 30 secondes
         };
     </script>
 </body>
