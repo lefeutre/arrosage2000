@@ -62,8 +62,8 @@
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
-        input[type="time"], input[type="number"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: var(--primary-light); }
+        input[type="time"], input[type="number"], input[type="text"] { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary-light); }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
         .day-checkbox { display: none; }
@@ -177,7 +177,7 @@
                             <div class="log-action" style="color: var(--success);">Arrosage manuel (5 min)</div>
                         </div>
                     </div>
-                    </div>
+                </div>
             </section>
         </main>
 
@@ -186,18 +186,7 @@
                 <h3>Configuration Matérielle</h3>
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label>Ville pour la météo</label>
-                    <select id="setting-city">
-                        <option value="Molsheim">Molsheim</option>
-                        <option value="Paris">Paris</option>
-                        <option value="Marseille">Marseille</option>
-                        <option value="Lyon">Lyon</option>
-                        <option value="Strasbourg">Strasbourg</option>
-                        <option value="Bordeaux">Bordeaux</option>
-                        <option value="Lille">Lille</option>
-                        <option value="Toulouse">Toulouse</option>
-                        <option value="Nice">Nice</option>
-                        <option value="Nantes">Nantes</option>
-                    </select>
+                    <input type="text" id="setting-city" placeholder="Saisissez une ville...">
                 </div>
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label>Volume maximal de la cuve (Litres)</label>
@@ -277,6 +266,9 @@
 
         // --- GESTION MÉTÉO ---
         let currentCity = localStorage.getItem('arrosage_city') || 'Molsheim';
+        
+        // Initialiser l'input avec la valeur sauvegardée
+        document.getElementById('setting-city').value = currentCity;
 
         async function fetchWeather() {
             try {
@@ -334,8 +326,8 @@
             }
 
             const newCity = document.getElementById('setting-city').value;
-            if (newCity && newCity !== "") {
-                currentCity = newCity;
+            if (newCity && newCity.trim() !== "") {
+                currentCity = newCity.trim();
                 localStorage.setItem('arrosage_city', currentCity);
                 fetchWeather(); 
             }
@@ -352,7 +344,6 @@
                     
                     updateWater(parseFloat(data.volume_eau));
                     
-                    // CORRECTION : Mise à jour systématique du texte et du bouton
                     DOM.pumpToggle.checked = data.pompe_etat;
                     DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Pompe Arrêtée";
                     DOM.pumpTxt.style.color = data.pompe_etat ? "var(--primary-light)" : "var(--text-main)";
