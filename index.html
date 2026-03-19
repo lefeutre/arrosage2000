@@ -85,7 +85,18 @@
 
         /* --- Liste Logs & Plans --- */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+        .log-date { font-size: 0.8rem; color: var(--text-sec); margin-bottom: 2px; }
+        .log-action { font-size: 0.9rem; font-weight: 600; }
         
+        /* --- Modal Ajout Appareil --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-card { background: var(--surface); width: 90%; max-width: 400px; border-radius: var(--radius); padding: 25px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--surface-alt); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .step-text { color: var(--text-sec); font-size: 0.9rem; margin-top: 15px; }
+
+        /* --- Navigation Basse --- */
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { width: 60px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; color: var(--text-sec); background: none; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;}
         .nav-item.active { color: var(--primary-light); }
@@ -195,6 +206,20 @@
 
         <main id="view-settings" class="view">
             <section class="card">
+                <h3>📱 Mes Appareils</h3>
+                <div id="device-list" style="margin-bottom: 15px;">
+                    <div class="list-item" style="border-left: 4px solid var(--primary);">
+                        <div>
+                            <div style="font-weight: 700;">Contrôleur Principal</div>
+                            <div style="font-size: 0.8rem; color: var(--text-sec);">S/N: A2000-WIFI-001</div>
+                        </div>
+                        <span style="color: var(--success); font-size: 0.8rem;">● En ligne</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline" id="btn-add-device" style="height: 40px; font-size: 0.9rem;">+ Associer un nouveau système</button>
+            </section>
+
+            <section class="card">
                 <h3>Configuration Matérielle</h3>
                 <div class="input-group" style="margin-bottom: 15px;">
                     <label>Ville pour la météo</label>
@@ -245,6 +270,32 @@
         </nav>
 
         <div id="toast">Message</div>
+
+        <div class="modal-overlay" id="pairing-modal">
+            <div class="modal-card">
+                <h3 style="margin-bottom: 20px; font-size: 1.1rem;">Ajouter un système</h3>
+                
+                <div id="pairing-step-1">
+                    <p style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 15px;">Veuillez saisir le numéro de série situé sous votre boîtier Arrosage 2000 ou scanner le réseau.</p>
+                    <input type="text" id="device-serial" placeholder="Ex: A2000-XXXX" style="margin-bottom: 20px; text-transform: uppercase;">
+                    <button class="btn" id="btn-start-pairing">Rechercher l'appareil</button>
+                    <button class="btn btn-outline" id="btn-cancel-pairing" style="margin-top: 10px;">Annuler</button>
+                </div>
+
+                <div id="pairing-step-2" style="display: none;">
+                    <div class="spinner"></div>
+                    <p class="step-text" id="pairing-status">Recherche de l'appareil à proximité...</p>
+                </div>
+
+                <div id="pairing-step-3" style="display: none;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+                    <h4 style="margin-bottom: 10px;">Système Associé !</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 20px;">L'appareil a été configuré et lié à votre compte avec succès.</p>
+                    <button class="btn" id="btn-finish-pairing">Terminer</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -253,7 +304,7 @@
             waterMax: 50,
             waterCurrent: 0,
             schedules: JSON.parse(localStorage.getItem('arrosage_schedules')) || [],
-            isRaining: false, // Bloquera l'arrosage si true
+            isRaining: false, 
             isHardwareOnline: false
         };
 
@@ -276,7 +327,18 @@
             lastSyncTime: document.getElementById('last-sync-time'),
             weatherToggle: document.getElementById('smart-weather-toggle'),
             soilType: document.getElementById('setting-soil-type'),
-            plantType: document.getElementById('setting-plant-type')
+            plantType: document.getElementById('setting-plant-type'),
+            
+            // Éléments du Modal
+            modal: document.getElementById('pairing-modal'),
+            btnOpenModal: document.getElementById('btn-add-device'),
+            btnCancelModal: document.getElementById('btn-cancel-pairing'),
+            btnStartPairing: document.getElementById('btn-start-pairing'),
+            btnFinishPairing: document.getElementById('btn-finish-pairing'),
+            step1: document.getElementById('pairing-step-1'),
+            step2: document.getElementById('pairing-step-2'),
+            step3: document.getElementById('pairing-step-3'),
+            pairingStatus: document.getElementById('pairing-status')
         };
 
         let toastTimeout;
@@ -338,7 +400,6 @@
                 const weatherData = await weatherRes.json();
                 const code = weatherData.current_weather.weathercode;
                 
-                // Météo > 50 = Pluie. On met à jour l'état global pour bloquer l'arrosage si besoin
                 AppState.isRaining = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95);
                 
                 let icon = AppState.isRaining ? "🌧️" : "🌤️";
@@ -364,13 +425,49 @@
             showToast("Réglages sauvegardés");
         });
 
-        // --- COMMUNICATION API (AVEC ANTI-SPAM) ---
+        // --- GESTION DU MODAL D'APPAIRAGE ---
+        DOM.btnOpenModal.addEventListener('click', () => {
+            DOM.modal.classList.add('show');
+            DOM.step1.style.display = 'block';
+            DOM.step2.style.display = 'none';
+            DOM.step3.style.display = 'none';
+            document.getElementById('device-serial').value = '';
+        });
+
+        DOM.btnCancelModal.addEventListener('click', () => {
+            DOM.modal.classList.remove('show');
+        });
+
+        DOM.btnStartPairing.addEventListener('click', () => {
+            DOM.step1.style.display = 'none';
+            DOM.step2.style.display = 'block';
+            DOM.pairingStatus.textContent = "Recherche de l'appareil à proximité...";
+            
+            // Simulation des étapes de connexion
+            setTimeout(() => {
+                DOM.pairingStatus.textContent = "Négociation des clés de sécurité...";
+                setTimeout(() => {
+                    DOM.pairingStatus.textContent = "Enregistrement sur le Cloud...";
+                    setTimeout(() => {
+                        DOM.step2.style.display = 'none';
+                        DOM.step3.style.display = 'block';
+                    }, 1500);
+                }, 2000);
+            }, 2000);
+        });
+
+        DOM.btnFinishPairing.addEventListener('click', () => {
+            DOM.modal.classList.remove('show');
+            showToast("Matériel configuré avec succès");
+        });
+
+        // --- COMMUNICATION API ---
         let isSendingCommand = false;
 
         async function sendPumpCommand(state) {
             if (isSendingCommand) return false;
             isSendingCommand = true;
-            DOM.pumpToggle.disabled = true; // Bloque le bouton pendant l'envoi
+            DOM.pumpToggle.disabled = true; 
 
             try {
                 const response = await fetch('/.netlify/functions/update-pump', {
@@ -393,7 +490,6 @@
                     const data = await response.json();
                     updateWater(parseFloat(data.volume_eau));
                     
-                    // On ne met à jour le bouton visuel que si aucun cycle auto n'est en cours pour ne pas faire clignoter l'UI
                     if (!SmartEngine.isActive) {
                         DOM.pumpToggle.checked = data.pompe_etat;
                         DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Prêt à arroser";
@@ -417,7 +513,6 @@
 
         DOM.pumpToggle.addEventListener('change', async (e) => {
             const active = e.target.checked;
-            // Si on allume à la main, on coupe les programmes intelligents en cours
             if (SmartEngine.isActive) SmartEngine.stop(); 
             
             DOM.pumpTxt.textContent = "Envoi...";
@@ -426,33 +521,31 @@
                 DOM.pumpTxt.textContent = active ? "Pompe en marche (Manuel)" : "Prêt à arroser";
                 DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
             } else {
-                DOM.pumpToggle.checked = !active; // Rollback visuel
+                DOM.pumpToggle.checked = !active; 
                 showToast("Erreur réseau");
             }
         });
 
-
-        // --- V7 : LE CERVEAU AGRONOMIQUE (SMART ENGINE) ---
+        // --- LE CERVEAU AGRONOMIQUE (SMART ENGINE) ---
         const SmartEngine = {
             isActive: false,
             interval: null,
             totalDurationLeft: 0,
             phaseDurationLeft: 0,
-            currentPhase: 'stop', // 'watering' ou 'pause'
+            currentPhase: 'stop', 
             soilRules: {
-                'limoneux': { waterTime: 999, pauseTime: 0 }, // Continu
-                'argileux': { waterTime: 3, pauseTime: 2 },  // 3m eau, 2m pause
-                'sableux':  { waterTime: 2, pauseTime: 1 }   // 2m eau, 1m pause
+                'limoneux': { waterTime: 999, pauseTime: 0 }, 
+                'argileux': { waterTime: 3, pauseTime: 2 },  
+                'sableux':  { waterTime: 2, pauseTime: 1 }   
             },
 
             async start(totalMinutes, source = "Minuteur") {
-                // 1. Vérification Météo Bloquante
                 if (DOM.weatherToggle.checked && AppState.isRaining && source !== "Forcé") {
                     showToast("Arrosage annulé : Pluie détectée ☔");
                     return;
                 }
 
-                this.stop(); // Stoppe toute tâche précédente
+                this.stop(); 
                 this.isActive = true;
                 this.totalDurationLeft = totalMinutes;
                 
@@ -493,7 +586,7 @@
             runClock(rule) {
                 this.updateUI();
                 this.interval = setInterval(() => {
-                    this.phaseDurationLeft -= 1/60; // Retranche 1 seconde (en fraction de min)
+                    this.phaseDurationLeft -= 1/60; 
                     this.totalDurationLeft -= (this.currentPhase === 'watering') ? 1/60 : 0;
 
                     this.updateUI();
@@ -506,10 +599,10 @@
                             } else if (this.totalDurationLeft <= 0) {
                                 this.stop(true);
                             } else {
-                                this.enterWateringPhase(rule); // Continue si pas de pause requise
+                                this.enterWateringPhase(rule); 
                             }
                         } else {
-                            this.enterWateringPhase(rule); // Fin de pause, on reprend
+                            this.enterWateringPhase(rule); 
                         }
                     }
                 }, 1000);
@@ -535,7 +628,7 @@
                 clearInterval(this.interval);
                 this.isActive = false;
                 
-                await sendPumpCommand(false); // Sécurité : on coupe la pompe
+                await sendPumpCommand(false); 
                 
                 DOM.banner.style.display = 'none';
                 DOM.btnBoost5.style.display = 'block';
@@ -551,7 +644,7 @@
 
         DOM.btnBoost5.addEventListener('click', () => SmartEngine.start(5, "Forcé"));
         DOM.btnBoost15.addEventListener('click', () => SmartEngine.start(15, "Forcé"));
-        DOM.btnStop.addEventListener('click', () => SmartEngine.start(0)); // Arrêt d'urgence
+        DOM.btnStop.addEventListener('click', () => SmartEngine.start(0)); 
 
         // --- GESTION DES PROGRAMMES ---
         function renderSchedules() {
@@ -598,7 +691,7 @@
         });
 
         function checkAutomatedSchedules() {
-            if (SmartEngine.isActive) return; // Ne pas interrompre un cycle en cours
+            if (SmartEngine.isActive) return; 
             
             const now = new Date();
             const daysMapping = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
@@ -626,9 +719,9 @@
             fetchWeather(); 
             fetchSystemStatus(); 
             
-            setInterval(fetchSystemStatus, 4000); // Ping base de données
-            setInterval(checkAutomatedSchedules, 30000); // Vérification horloge
-            setInterval(fetchWeather, 3600000); // Météo toutes les heures
+            setInterval(fetchSystemStatus, 4000); 
+            setInterval(checkAutomatedSchedules, 30000); 
+            setInterval(fetchWeather, 3600000); 
         };
     </script>
 </body>
