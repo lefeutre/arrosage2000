@@ -24,7 +24,7 @@
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; justify-content: center; transition: background-color 0.3s; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* CORRECTION DRAPEAU CSS (Même sur Windows) */
+        /* Drapeau CSS & Header */
         header { padding: max(20px, env(safe-area-inset-top)) 20px 15px; display: flex; justify-content: space-between; align-items: center; }
         .header-title { font-size: 1.4rem; font-weight: 800; background: linear-gradient(90deg, var(--primary-light), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px;}
         .french-flag { display: inline-block; width: 22px; height: 15px; background: linear-gradient(90deg, #002395 33.33%, #ffffff 33.33%, #ffffff 66.66%, #ed2939 66.66%); border-radius: 2px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
@@ -33,7 +33,7 @@
         .view.active { display: block; }
         @keyframes fadeUp { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 
-        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         .card h3 { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
 
         /* --- Météo Widget --- */
@@ -60,13 +60,14 @@
         .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: #fff; border-radius: 50%; transition: transform .3s; }
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translate3d(22px, 0, 0); }
+        input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
 
         /* --- Formulaires --- */
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
         input[type="time"], input[type="number"], input[type="text"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
-        input:focus { border-color: var(--primary-light); }
+        input:focus, select:focus { border-color: var(--primary-light); }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
         .day-checkbox { display: none; }
@@ -78,12 +79,13 @@
         .btn-outline { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); }
         .btn-outline:active { background: var(--border); }
 
+        /* --- UI Active Task --- */
+        #active-task-banner { display: none; padding: 12px; background: rgba(14, 165, 233, 0.1); border-bottom: 1px solid var(--primary-light); color: var(--primary-light); font-size: 0.85rem; font-weight: 700; text-align: center; animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { opacity: 0.8; } 50% { opacity: 1; background: rgba(14, 165, 233, 0.2); } 100% { opacity: 0.8; } }
+
         /* --- Liste Logs & Plans --- */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
-        .log-date { font-size: 0.8rem; color: var(--text-sec); margin-bottom: 2px; }
-        .log-action { font-size: 0.9rem; font-weight: 600; }
-
-        /* --- Navigation Basse --- */
+        
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { width: 60px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; color: var(--text-sec); background: none; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;}
         .nav-item.active { color: var(--primary-light); }
@@ -99,8 +101,10 @@
     <div class="app-container">
         <header>
             <div class="header-title">Arrosage 2000 <span class="french-flag"></span></div>
-            <div id="connexion-badge" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600;">● Connexion DB...</div>
+            <div id="connexion-badge" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600;">● Init...</div>
         </header>
+        
+        <div id="active-task-banner">🌱 Arrosage intelligent en cours...</div>
 
         <main id="view-home" class="view active">
             <section class="card" style="padding: 15px;">
@@ -133,24 +137,17 @@
             <section class="card">
                 <h3>⚙️ Contrôle Manuel</h3>
                 <div class="switch-row">
-                    <span style="font-weight: 600;" id="pump-txt">Connexion en cours...</span>
+                    <span style="font-weight: 600;" id="pump-txt">Connexion au serveur...</span>
                     <label class="switch">
-                        <input type="checkbox" id="pump-toggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <div class="switch-row" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-sec);">Mode Éco (Impulsions)</span>
-                    <label class="switch" style="transform: scale(0.85); transform-origin: right;">
-                        <input type="checkbox" id="eco-mode-toggle">
+                        <input type="checkbox" id="pump-toggle" disabled>
                         <span class="slider"></span>
                     </label>
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn btn-outline" id="btn-boost-5" style="height: 40px; font-size: 0.85rem;">⏱️ Minuteur 5 min</button>
-                    <button class="btn btn-outline" id="btn-boost-15" style="height: 40px; font-size: 0.85rem;">⏱️ Minuteur 15 min</button>
+                    <button class="btn btn-outline" id="btn-boost-5" style="height: 40px; font-size: 0.85rem;">⏱️ 5 min</button>
+                    <button class="btn btn-outline" id="btn-boost-15" style="height: 40px; font-size: 0.85rem;">⏱️ 15 min</button>
+                    <button class="btn btn-outline" id="btn-stop-task" style="height: 40px; font-size: 0.85rem; color: var(--danger); display: none;">🛑 STOP</button>
                 </div>
             </section>
         </main>
@@ -179,7 +176,6 @@
                 </div>
                 <button class="btn" id="btn-save-plan">Ajouter au Planning</button>
             </section>
-            
             <section class="card">
                 <h3>Programmes Actifs</h3>
                 <div id="plan-list-container"></div>
@@ -188,13 +184,10 @@
 
         <main id="view-stats" class="view">
             <section class="card">
-                <h3>Historique Récent</h3>
+                <h3>Historique Récent (Local)</h3>
                 <div id="logs-container">
-                    <div class="list-item">
-                        <div>
-                            <div class="log-date">17 Mars - 14:00</div>
-                            <div class="log-action" style="color: var(--success);">Arrosage manuel (5 min)</div>
-                        </div>
+                    <div style="text-align:center; padding: 15px; color: var(--text-sec); font-size: 0.85rem;">
+                        L'historique complet sera disponible une fois connecté à la base de données de production.
                     </div>
                 </div>
             </section>
@@ -211,12 +204,22 @@
                     <label>Volume maximal de la cuve (Litres)</label>
                     <input type="number" id="setting-tank-max" value="50">
                 </div>
+                
                 <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Type de plantation</label>
+                    <label>Type de végétation</label>
                     <select id="setting-plant-type">
                         <option value="gazon">Gazon (Besoins normaux)</option>
                         <option value="potager">Potager (Besoins élevés)</option>
                         <option value="massif">Massif floral (Besoins modérés)</option>
+                    </select>
+                </div>
+
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Nature du Sol (Définit la méthode d'arrosage)</label>
+                    <select id="setting-soil-type">
+                        <option value="limoneux">Limon / Terreau (Arrosage Continu)</option>
+                        <option value="argileux">Terre Argileuse (Arrosage par Impulsions)</option>
+                        <option value="sableux">Terre Sableuse (Arrosage Court/Rapide)</option>
                     </select>
                 </div>
                 <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder les réglages</button>
@@ -245,11 +248,13 @@
     </div>
 
     <script>
-        // CORRECTION : Restauration des programmes sauvegardés au chargement
+        // --- ETAT GLOBAL DE L'APP ---
         const AppState = {
             waterMax: 50,
             waterCurrent: 0,
-            schedules: JSON.parse(localStorage.getItem('arrosage_schedules')) || []
+            schedules: JSON.parse(localStorage.getItem('arrosage_schedules')) || [],
+            isRaining: false, // Bloquera l'arrosage si true
+            isHardwareOnline: false
         };
 
         const DOM = {
@@ -266,9 +271,12 @@
             planList: document.getElementById('plan-list-container'),
             btnBoost5: document.getElementById('btn-boost-5'),
             btnBoost15: document.getElementById('btn-boost-15'),
+            btnStop: document.getElementById('btn-stop-task'),
+            banner: document.getElementById('active-task-banner'),
             lastSyncTime: document.getElementById('last-sync-time'),
-            plantType: document.getElementById('setting-plant-type'),
-            ecoToggle: document.getElementById('eco-mode-toggle')
+            weatherToggle: document.getElementById('smart-weather-toggle'),
+            soilType: document.getElementById('setting-soil-type'),
+            plantType: document.getElementById('setting-plant-type')
         };
 
         let toastTimeout;
@@ -289,7 +297,7 @@
             });
         });
 
-        // Gestion Cuve & Alerte Rouge
+        // Gestion Cuve
         function updateWater(liters) {
             AppState.waterCurrent = Math.max(0, Math.min(liters, AppState.waterMax));
             const pct = (AppState.waterCurrent / AppState.waterMax) * 100;
@@ -297,94 +305,73 @@
             DOM.volumeVal.textContent = AppState.waterCurrent.toFixed(1);
 
             if (pct <= 15) {
-                DOM.waterLevel.style.background = "linear-gradient(180deg, #ef4444, #b91c1c)"; // Rouge alerte
+                DOM.waterLevel.style.background = "linear-gradient(180deg, #ef4444, #b91c1c)"; 
             } else {
-                DOM.waterLevel.style.background = "linear-gradient(180deg, var(--primary-light), var(--primary))"; // Bleu normal
+                DOM.waterLevel.style.background = "linear-gradient(180deg, var(--primary-light), var(--primary))"; 
             }
         }
 
-        // --- GESTION MÉTÉO ---
+        // --- GESTION DES REGLAGES LOCAUX ---
         let currentCity = localStorage.getItem('arrosage_city') || 'Molsheim';
         document.getElementById('setting-city').value = currentCity;
-
-        // --- RESTAURATION DES REGLAGES ---
-        let currentPlantType = localStorage.getItem('arrosage_plant') || 'gazon';
-        DOM.plantType.value = currentPlantType;
         
-        let ecoModeActive = localStorage.getItem('arrosage_eco') === 'true';
-        DOM.ecoToggle.checked = ecoModeActive;
+        DOM.soilType.value = localStorage.getItem('arrosage_soil') || 'limoneux';
+        DOM.plantType.value = localStorage.getItem('arrosage_plant') || 'gazon';
+        DOM.weatherToggle.checked = localStorage.getItem('arrosage_weather_block') !== 'false';
 
-        DOM.ecoToggle.addEventListener('change', (e) => {
-            localStorage.setItem('arrosage_eco', e.target.checked);
-            showToast(e.target.checked ? "Mode Éco activé" : "Mode Éco désactivé");
+        DOM.weatherToggle.addEventListener('change', (e) => {
+            localStorage.setItem('arrosage_weather_block', e.target.checked);
         });
 
+        // --- MÉTÉO INTELLIGENTE ---
         async function fetchWeather() {
             try {
                 const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${currentCity}&count=1&language=fr`);
                 const geoData = await geoRes.json();
-                
-                if (!geoData.results || geoData.results.length === 0) {
-                    document.getElementById('weather-desc').textContent = "Ville non trouvée.";
-                    return;
-                }
+                if (!geoData.results || geoData.results.length === 0) return;
                 
                 const lat = geoData.results[0].latitude;
                 const lon = geoData.results[0].longitude;
-                const cityName = geoData.results[0].name;
-                
-                document.getElementById('weather-city-display').textContent = cityName;
-                document.getElementById('setting-city').value = cityName;
+                document.getElementById('weather-city-display').textContent = geoData.results[0].name;
 
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
                 const weatherData = await weatherRes.json();
-                
-                const temp = weatherData.current_weather.temperature;
                 const code = weatherData.current_weather.weathercode;
                 
-                let icon = "🌤️";
-                let desc = "Temps sec";
-                let action = "Arrosage recommandé";
-
-                if (code === 0) { icon = "☀️"; desc = "Ciel dégagé"; }
-                else if (code >= 1 && code <= 3) { icon = "⛅"; desc = "Nuageux"; }
-                else if (code >= 51 && code <= 67) { icon = "🌧️"; desc = "Pluie"; action = "Arrosage inutile"; }
-                else if (code >= 71 && code <= 77) { icon = "❄️"; desc = "Neige"; action = "Arrosage désactivé"; }
-                else if (code >= 80 && code <= 82) { icon = "🌦️"; desc = "Averses"; action = "Pluie prévue"; }
-                else if (code >= 95) { icon = "⛈️"; desc = "Orage"; action = "Arrosage désactivé"; }
-
+                // Météo > 50 = Pluie. On met à jour l'état global pour bloquer l'arrosage si besoin
+                AppState.isRaining = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95);
+                
+                let icon = AppState.isRaining ? "🌧️" : "🌤️";
+                let desc = AppState.isRaining ? "Pluie détectée" : "Temps sec";
+                
                 document.getElementById('weather-icon').textContent = icon;
-                document.getElementById('weather-desc').textContent = `${temp}°C - ${desc}. ${action}.`;
+                document.getElementById('weather-desc').textContent = `${weatherData.current_weather.temperature}°C - ${desc}.`;
 
             } catch (error) {
-                console.error("Erreur météo:", error);
-                document.getElementById('weather-desc').textContent = "Erreur de réseau météo.";
+                console.error("Erreur météo");
             }
         }
 
         document.getElementById('btn-save-settings').addEventListener('click', () => {
-            const newMax = parseInt(DOM.inputTankMax.value);
-            if(newMax > 0) {
-                AppState.waterMax = newMax;
-                DOM.displayMaxTank.textContent = newMax;
-                updateWater(AppState.waterCurrent);
-            }
-
             const newCity = document.getElementById('setting-city').value;
             if (newCity && newCity.trim() !== "") {
                 currentCity = newCity.trim();
                 localStorage.setItem('arrosage_city', currentCity);
                 fetchWeather(); 
             }
-
-            const newPlantType = DOM.plantType.value;
-            localStorage.setItem('arrosage_plant', newPlantType);
-
+            localStorage.setItem('arrosage_soil', DOM.soilType.value);
+            localStorage.setItem('arrosage_plant', DOM.plantType.value);
             showToast("Réglages sauvegardés");
         });
 
-        // --- CONNEXION NEON DB (API) ---
+        // --- COMMUNICATION API (AVEC ANTI-SPAM) ---
+        let isSendingCommand = false;
+
         async function sendPumpCommand(state) {
+            if (isSendingCommand) return false;
+            isSendingCommand = true;
+            DOM.pumpToggle.disabled = true; // Bloque le bouton pendant l'envoi
+
             try {
                 const response = await fetch('/.netlify/functions/update-pump', {
                     method: 'POST',
@@ -393,6 +380,9 @@
                 return response.ok;
             } catch (error) {
                 return false;
+            } finally {
+                isSendingCommand = false;
+                DOM.pumpToggle.disabled = false;
             }
         }
 
@@ -401,71 +391,167 @@
                 const response = await fetch('/.netlify/functions/get-status');
                 if (response.ok) {
                     const data = await response.json();
-                    
                     updateWater(parseFloat(data.volume_eau));
                     
-                    DOM.pumpToggle.checked = data.pompe_etat;
-                    DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Pompe Arrêtée";
-                    DOM.pumpTxt.style.color = data.pompe_etat ? "var(--primary-light)" : "var(--text-main)";
-
+                    // On ne met à jour le bouton visuel que si aucun cycle auto n'est en cours pour ne pas faire clignoter l'UI
+                    if (!SmartEngine.isActive) {
+                        DOM.pumpToggle.checked = data.pompe_etat;
+                        DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Prêt à arroser";
+                        DOM.pumpTxt.style.color = data.pompe_etat ? "var(--primary-light)" : "var(--text-main)";
+                    }
+                    
+                    DOM.pumpToggle.disabled = false;
+                    AppState.isHardwareOnline = true;
                     DOM.badge.textContent = "● Connecté";
                     DOM.badge.style.color = "var(--success)";
-                    
-                    const now = new Date();
-                    DOM.lastSyncTime.textContent = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    DOM.lastSyncTime.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 }
             } catch (error) {
-                // CORRECTION : Affichage d'un statut "Hors ligne" explicite au lieu d'un chargement infini
-                console.error("Erreur de connexion:", error);
-                DOM.pumpTxt.textContent = "Pompe Arrêtée (Hors ligne)";
+                AppState.isHardwareOnline = false;
+                if (!SmartEngine.isActive) DOM.pumpTxt.textContent = "Système Hors Ligne";
                 DOM.badge.textContent = "● Hors ligne";
                 DOM.badge.style.color = "var(--danger)";
+                DOM.pumpToggle.disabled = true;
             }
         }
 
-        // Contrôle manuel switch
         DOM.pumpToggle.addEventListener('change', async (e) => {
             const active = e.target.checked;
-            DOM.pumpTxt.textContent = active ? "Démarrage..." : "Arrêt...";
-            DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
-
+            // Si on allume à la main, on coupe les programmes intelligents en cours
+            if (SmartEngine.isActive) SmartEngine.stop(); 
+            
+            DOM.pumpTxt.textContent = "Envoi...";
             const success = await sendPumpCommand(active);
             if (success) {
-                DOM.pumpTxt.textContent = active ? "Pompe en marche" : "Pompe Arrêtée";
-                showToast(active ? "Pompe activée" : "Pompe arrêtée");
+                DOM.pumpTxt.textContent = active ? "Pompe en marche (Manuel)" : "Prêt à arroser";
+                DOM.pumpTxt.style.color = active ? "var(--primary-light)" : "var(--text-main)";
             } else {
-                showToast("Erreur lors de l'envoi");
+                DOM.pumpToggle.checked = !active; // Rollback visuel
+                showToast("Erreur réseau");
             }
         });
 
-        // Fonction Boost (Arrosage Minuté)
-        let boostTimer = null;
-        async function startBoost(minutes) {
-            const success = await sendPumpCommand(true);
-            if (!success) {
-                showToast("Erreur de communication avec le serveur.");
-                return;
-            }
-            
-            showToast(`Arrosage lancé pour ${minutes} minutes`);
-            DOM.pumpToggle.checked = true;
-            DOM.pumpTxt.textContent = `Minuteur en cours (${minutes}m)`;
-            DOM.pumpTxt.style.color = "var(--primary-light)";
 
-            clearTimeout(boostTimer);
-            boostTimer = setTimeout(async () => {
-                const stopSuccess = await sendPumpCommand(false);
-                if (stopSuccess) {
-                    DOM.pumpToggle.checked = false;
-                    DOM.pumpTxt.textContent = "Pompe Arrêtée";
-                    DOM.pumpTxt.style.color = "var(--text-main)";
-                    showToast("Fin de l'arrosage minuté.");
+        // --- V7 : LE CERVEAU AGRONOMIQUE (SMART ENGINE) ---
+        const SmartEngine = {
+            isActive: false,
+            interval: null,
+            totalDurationLeft: 0,
+            phaseDurationLeft: 0,
+            currentPhase: 'stop', // 'watering' ou 'pause'
+            soilRules: {
+                'limoneux': { waterTime: 999, pauseTime: 0 }, // Continu
+                'argileux': { waterTime: 3, pauseTime: 2 },  // 3m eau, 2m pause
+                'sableux':  { waterTime: 2, pauseTime: 1 }   // 2m eau, 1m pause
+            },
+
+            async start(totalMinutes, source = "Minuteur") {
+                // 1. Vérification Météo Bloquante
+                if (DOM.weatherToggle.checked && AppState.isRaining && source !== "Forcé") {
+                    showToast("Arrosage annulé : Pluie détectée ☔");
+                    return;
                 }
-            }, minutes * 60 * 1000); 
-        }
 
-        DOM.btnBoost5.addEventListener('click', () => startBoost(5));
-        DOM.btnBoost15.addEventListener('click', () => startBoost(15));
+                this.stop(); // Stoppe toute tâche précédente
+                this.isActive = true;
+                this.totalDurationLeft = totalMinutes;
+                
+                const soil = DOM.soilType.value;
+                const rule = this.soilRules[soil];
+
+                DOM.banner.style.display = 'block';
+                DOM.btnBoost5.style.display = 'none';
+                DOM.btnBoost15.style.display = 'none';
+                DOM.btnStop.style.display = 'block';
+
+                showToast(`Cycle démarré (${soil})`);
+                this.enterWateringPhase(rule);
+            },
+
+            async enterWateringPhase(rule) {
+                if (this.totalDurationLeft <= 0) return this.stop(true);
+                
+                this.currentPhase = 'watering';
+                this.phaseDurationLeft = Math.min(rule.waterTime, this.totalDurationLeft);
+                
+                await sendPumpCommand(true);
+                DOM.pumpToggle.checked = true;
+                
+                this.runClock(rule);
+            },
+
+            async enterPausePhase(rule) {
+                this.currentPhase = 'pause';
+                this.phaseDurationLeft = rule.pauseTime;
+                
+                await sendPumpCommand(false);
+                DOM.pumpToggle.checked = false;
+                
+                this.runClock(rule);
+            },
+
+            runClock(rule) {
+                this.updateUI();
+                this.interval = setInterval(() => {
+                    this.phaseDurationLeft -= 1/60; // Retranche 1 seconde (en fraction de min)
+                    this.totalDurationLeft -= (this.currentPhase === 'watering') ? 1/60 : 0;
+
+                    this.updateUI();
+
+                    if (this.phaseDurationLeft <= 0) {
+                        clearInterval(this.interval);
+                        if (this.currentPhase === 'watering') {
+                            if (this.totalDurationLeft > 0 && rule.pauseTime > 0) {
+                                this.enterPausePhase(rule);
+                            } else if (this.totalDurationLeft <= 0) {
+                                this.stop(true);
+                            } else {
+                                this.enterWateringPhase(rule); // Continue si pas de pause requise
+                            }
+                        } else {
+                            this.enterWateringPhase(rule); // Fin de pause, on reprend
+                        }
+                    }
+                }, 1000);
+            },
+
+            updateUI() {
+                const minsLeft = Math.ceil(this.totalDurationLeft);
+                const phaseMins = Math.ceil(this.phaseDurationLeft);
+                
+                if (this.currentPhase === 'watering') {
+                    DOM.banner.innerHTML = `💧 Arrosage en cours... (${minsLeft} min restantes au total)`;
+                    DOM.banner.style.color = "var(--primary-light)";
+                    DOM.pumpTxt.textContent = "Distribution d'eau active";
+                } else {
+                    DOM.banner.innerHTML = `⏳ Infiltration dans le sol... (Reprise dans ${phaseMins} min)`;
+                    DOM.banner.style.color = "var(--warning)";
+                    DOM.pumpTxt.textContent = "Pause Agronomique";
+                }
+            },
+
+            async stop(completed = false) {
+                if (!this.isActive) return;
+                clearInterval(this.interval);
+                this.isActive = false;
+                
+                await sendPumpCommand(false); // Sécurité : on coupe la pompe
+                
+                DOM.banner.style.display = 'none';
+                DOM.btnBoost5.style.display = 'block';
+                DOM.btnBoost15.style.display = 'block';
+                DOM.btnStop.style.display = 'none';
+                DOM.pumpToggle.checked = false;
+                DOM.pumpTxt.textContent = "Prêt à arroser";
+                
+                if (completed) showToast("Cycle d'arrosage terminé ✨");
+                else showToast("Arrosage forcé à l'arrêt 🛑");
+            }
+        };
+
+        DOM.btnBoost5.addEventListener('click', () => SmartEngine.start(5, "Forcé"));
+        DOM.btnBoost15.addEventListener('click', () => SmartEngine.start(15, "Forcé"));
+        DOM.btnStop.addEventListener('click', () => SmartEngine.start(0)); // Arrêt d'urgence
 
         // --- GESTION DES PROGRAMMES ---
         function renderSchedules() {
@@ -487,13 +573,11 @@
                 DOM.planList.appendChild(div);
             });
 
-            // CORRECTION : Sauvegarde après suppression
             document.querySelectorAll('.btn-del').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     AppState.schedules.splice(e.currentTarget.dataset.index, 1);
-                    localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules)); // Sauvegarde locale
+                    localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules));
                     renderSchedules();
-                    showToast("Programme supprimé");
                 });
             });
         }
@@ -506,32 +590,26 @@
             if (!time || !duration || days.length === 0) return showToast("Informations incomplètes");
 
             AppState.schedules.push({ time, duration, days });
-            localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules)); // Sauvegarde locale
+            localStorage.setItem('arrosage_schedules', JSON.stringify(AppState.schedules));
             
             renderSchedules();
             showToast("Programme ajouté");
-            
             document.querySelectorAll('.day-checkbox').forEach(cb => cb.checked = false);
-            document.getElementById('time-in').value = '';
-            document.getElementById('dur-in').value = '';
         });
 
-        // --- NOUVEAU : VÉRIFICATION AUTOMATIQUE DES HORAIRES (V6) ---
         function checkAutomatedSchedules() {
+            if (SmartEngine.isActive) return; // Ne pas interrompre un cycle en cours
+            
             const now = new Date();
             const daysMapping = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
             const currentDayStr = daysMapping[now.getDay()];
-            // On récupère l'heure au format HH:MM
             const currentTimeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', ':');
 
             AppState.schedules.forEach(plan => {
-                // Si le jour et l'heure correspondent
                 if (plan.days.includes(currentDayStr) && plan.time === currentTimeStr) {
-                    // On s'assure de ne pas le déclencher en boucle pendant la même minute
                     if (!plan.lastTriggered || plan.lastTriggered !== currentTimeStr) {
                         plan.lastTriggered = currentTimeStr;
-                        // On lance l'arrosage pour la durée prévue
-                        startBoost(parseInt(plan.duration));
+                        SmartEngine.start(parseInt(plan.duration), "Automatique");
                     }
                 }
             });
@@ -542,16 +620,15 @@
             else document.body.classList.remove('light-theme');
         });
 
-        // CORRECTION DE L'INITIALISATION : Parallélisation des appels pour éviter le blocage
+        // --- INIT DU SYSTEME ---
         window.onload = () => {
-            renderSchedules(); // Charge l'interface locale tout de suite
-            fetchWeather(); // Lance la météo sans bloquer le reste
+            renderSchedules(); 
+            fetchWeather(); 
+            fetchSystemStatus(); 
             
-            fetchSystemStatus(); // Première tentative de connexion Neon
-            
-            // CORRECTION DES BOUCLES : Vérification de l'horloge plus fréquente (30s)
-            setInterval(fetchSystemStatus, 3000); 
-            setInterval(checkAutomatedSchedules, 30000); // 30 secondes
+            setInterval(fetchSystemStatus, 4000); // Ping base de données
+            setInterval(checkAutomatedSchedules, 30000); // Vérification horloge
+            setInterval(fetchWeather, 3600000); // Météo toutes les heures
         };
     </script>
 </body>
