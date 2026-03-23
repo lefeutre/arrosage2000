@@ -247,7 +247,8 @@
             waterMax: parseInt(localStorage.getItem('arrosage_tank_max')) || 50,
             waterCurrent: 0,
             schedules: JSON.parse(localStorage.getItem('arrosage_schedules')) || [],
-            isRaining: false
+            isRaining: false,
+            lastTriggeredTime: "" // Évite de lancer 2 fois dans la même minute
         };
 
         const DOM = {
@@ -365,6 +366,26 @@
         DOM.btnBoost15.addEventListener('click', () => SmartEngine.start(15));
         DOM.btnStop.addEventListener('click', () => SmartEngine.stop());
 
+        // --- HORLOGE DE PROGRAMMATION ---
+        function verifierPlanning() {
+            if (SmartEngine.isActive) return; 
+            
+            const now = new Date();
+            const jours = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
+            const jourActuel = jours[now.getDay()];
+            const heureActuelle = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+
+            AppState.schedules.forEach(plan => {
+                if (plan.days.includes(jourActuel) && plan.time === heureActuelle) {
+                    if (AppState.lastTriggeredTime !== heureActuelle) {
+                        AppState.lastTriggeredTime = heureActuelle; 
+                        showToast(`⏰ Programme auto démarré !`);
+                        SmartEngine.start(parseInt(plan.duration));
+                    }
+                }
+            });
+        }
+
         // Météo
         async function fetchWeather() {
             const city = localStorage.getItem('arrosage_city') || 'Molsheim';
@@ -402,8 +423,13 @@
             document.getElementById('setting-city').value = localStorage.getItem('arrosage_city') || 'Molsheim';
             DOM.soilType.value = localStorage.getItem('arrosage_soil') || 'limoneux';
             DOM.plantType.value = localStorage.getItem('arrosage_plant') || 'gazon';
-            renderSchedules(); fetchWeather(); fetchSystemStatus();
+            renderSchedules(); 
+            fetchWeather(); 
+            fetchSystemStatus();
+            
+            // Les deux minuteries
             setInterval(fetchSystemStatus, 4000);
+            setInterval(verifierPlanning, 30000); 
         };
     </script>
 </body>
