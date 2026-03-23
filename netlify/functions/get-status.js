@@ -4,15 +4,20 @@ export const handler = async (event) => {
   try {
     const sql = neon();
     
-    // Ajout de la colonne 'planning' dans la requête
-    const result = await sql`SELECT pompe_etat, volume_eau, planning FROM systeme_arrosage WHERE id = 1`;
+    // On prend la dernière ligne du tableau (ORDER BY id DESC LIMIT 1)
+    const result = await sql`SELECT pompe_etat, volume_eau, planning FROM systeme_arrosage ORDER BY id DESC LIMIT 1`;
     
-    const data = result[0];
-    
-    // Sécurité : si le planning est totalement vide dans Neon, on renvoie un tableau vide []
-    if (!data.planning) {
-      data.planning = [];
+    // Sécurité : si la table est vide, on renvoie du vide au lieu de planter
+    if (result.length === 0) {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pompe_etat: false, volume_eau: 0, planning: [] })
+      };
     }
+
+    const data = result[0];
+    if (!data.planning) data.planning = [];
 
     return {
       statusCode: 200,
