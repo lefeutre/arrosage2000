@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arrosage 2000 Pro Custom</title>
+    <title>Arrosage 2000 Pro - Noah Edition</title>
     <style>
         /* --- MOTEUR DE THÈMES --- */
         :root {
-            /* Thème Cyber Night (Défaut) */
             --bg: #080c16; --surf: #151e32; --surf-alt: rgba(255, 255, 255, 0.03);
             --text: #f8fafc; --text-dim: #94a3b8; --prim: #0ea5e9; --prim-l: #38bdf8;
             --font: 'system-ui', sans-serif; --rad: 20px;
@@ -19,11 +18,17 @@
             --font: 'Trebuchet MS', sans-serif; --rad: 30px;
         }
 
-        body.theme-sunset {
-            --bg: #2d1b36; --surf: #4a2c5a; --surf-alt: rgba(255,255,255,0.05);
-            --text: #fff; --text-dim: #ff9a8b; --prim: #f97316; --prim-l: #fb923c;
-            --font: 'Verdana', sans-serif; --rad: 15px;
+        /* --- THÈME NOAH (BIÈRE) --- */
+        body.theme-noah {
+            --bg: #1a0f00; --surf: #3d2b1f; --surf-alt: #4d3b2f;
+            --text: #fef3c7; --text-dim: #d97706; --prim: #f59e0b; --prim-l: #fbbf24;
+            --font: 'Georgia', serif; --rad: 12px;
         }
+        .theme-noah .water-mini {
+            background: linear-gradient(to bottom, #f59e0b, #d97706) !important;
+            border-top: 8px solid #fff; /* La mousse */
+        }
+        .theme-noah .tank-mini { border: 4px solid #fef3c7; border-top: none; }
 
         body.theme-matrix {
             --bg: #000; --surf: #0a0a0a; --surf-alt: #111;
@@ -46,20 +51,20 @@
         .card { background: var(--surf); border-radius: var(--rad); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
         h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; color: var(--text-dim); }
 
-        /* Banner Active */
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-        /* Tank Graphic */
-        .tank-mini { width: 80px; height: 140px; border: 3px solid var(--text-dim); border-radius: 8px 8px 16px 16px; margin: 10px auto; position: relative; overflow: hidden; }
+        .tank-mini { width: 85px; height: 140px; border: 3px solid var(--text-dim); border-radius: 5px 5px 20px 20px; margin: 10px auto; position: relative; overflow: hidden; }
         .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--prim); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
         .tank-val { font-size: 2.2rem; font-weight: 900; }
 
-        /* Form & Select */
         .input-box { width: 100%; padding: 12px; border-radius: 10px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; }
-        select.input-box { cursor: pointer; border-right: 10px solid transparent; }
 
-        /* Switches */
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
+        .day-check { display: none; }
+        .day-label { height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surf-alt); color: var(--text-dim); font-weight: 600; font-size: 0.8rem; border: 1px solid transparent; cursor: pointer; }
+        .day-check:checked + .day-label { background: var(--prim); color: var(--bg); border-color: var(--prim-l); }
+
         .switch { position: relative; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #334155; border-radius: 30px; transition: .3s; }
@@ -67,58 +72,54 @@
         input:checked + .slider { background: var(--prim); }
         input:checked + .slider:before { transform: translateX(24px); }
 
-        /* Buttons */
-        .btn { width: 100%; padding: 15px; background: var(--prim); color: var(--bg); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 1rem; }
-        .btn-boost { flex: 1; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 10px; border-radius: 10px; font-weight: bold; }
-        .btn-boost:active { background: var(--prim); color: var(--bg); }
+        .btn { width: 100%; padding: 15px; background: var(--prim); color: var(--bg); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
+        .btn-boost { flex: 1; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        /* Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: var(--surf); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); backdrop-filter: blur(10px); }
         .nav-item { border: none; background: none; color: var(--text-dim); font-size: 0.7rem; font-weight: bold; display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
         .nav-item.active { color: var(--prim); }
         
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 12px 25px; border-radius: 50px; font-weight: 800; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 10000; }
-        #toast.show { opacity: 1; transform: translate(-50%, -10px); }
-
-        .list-item { display: flex; justify-content: space-between; padding: 12px; background: var(--surf-alt); border-radius: 10px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 12px 25px; border-radius: 50px; font-weight: 800; opacity: 0; transition: 0.3s; z-index: 10000; }
+        #toast.show { opacity: 1; }
+        .list-item { display: flex; justify-content: space-between; padding: 12px; background: var(--surf-alt); border-radius: 10px; margin-top: 8px; font-size: 0.9rem; }
     </style>
 </head>
-<body class="theme-cyber">
+<body>
 
     <div class="app-container">
         <header>
-            <div class="header-title">Arrosage 2000 🇫🇷</div>
+            <div class="header-title" id="main-title">Arrosage 2000</div>
             <div id="badge" style="font-size: 0.8rem;">● Connexion...</div>
         </header>
 
-        <div id="active-banner">💧 ARROSAGE EN COURS</div>
+        <div id="active-banner">ACTION EN COURS</div>
 
         <main id="view-home" class="view active">
             <div class="card">
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <span id="w-icon" style="font-size: 2.8rem;">🌤️</span>
                     <div>
-                        <b id="w-city" style="font-size: 1.2rem;">Molsheim</b><br>
-                        <span id="w-desc" style="color: var(--text-dim);">Chargement...</span>
+                        <b id="w-city" style="font-size: 1.2rem;">--</b><br>
+                        <span id="w-desc" style="color: var(--text-dim);">Météo...</span>
                     </div>
                 </div>
                 <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <small>Désactiver si pluie annoncée</small>
+                    <small id="rain-label">Bloquer si pluie</small>
                     <label class="switch"><input type="checkbox" id="rain-toggle" checked><span class="slider"></span></label>
                 </div>
             </div>
 
             <div class="card" style="text-align: center;">
-                <h3>Réserve d'Eau</h3>
+                <h3 id="tank-label">Réserve de Liquide</h3>
                 <div class="tank-mini"><div id="water-level" class="water-mini"></div></div>
                 <div class="tank-val" id="vol-txt">-- L</div>
-                <small style="color: var(--text-dim)">Capacité : <span id="max-txt">50</span>L</small>
+                <small style="color: var(--text-dim)">Max : <span id="max-txt">50</span>L</small>
             </div>
 
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <b id="pump-label">État Pompe</b>
+                    <b id="pump-label">Pompe</b>
                     <label class="switch"><input type="checkbox" id="pump-toggle"><span class="slider"></span></label>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -131,38 +132,41 @@
 
         <main id="view-plan" class="view">
             <div class="card">
-                <h3>Programmer</h3>
+                <h3>Ajouter un programme</h3>
                 <div style="display: flex; gap: 10px;">
                     <input type="time" id="time-in" class="input-box">
                     <input type="number" id="dur-in" class="input-box" placeholder="Min">
                 </div>
-                <div style="display: flex; justify-content: space-around; margin: 10px 0;">
-                   <small>Tous les jours</small>
+                <div class="days-grid">
+                    <label><input type="checkbox" class="day-check" value="Lu"><div class="day-label">Lu</div></label>
+                    <label><input type="checkbox" class="day-check" value="Ma"><div class="day-label">Ma</div></label>
+                    <label><input type="checkbox" class="day-check" value="Me"><div class="day-label">Me</div></label>
+                    <label><input type="checkbox" class="day-check" value="Je"><div class="day-label">Je</div></label>
+                    <label><input type="checkbox" class="day-check" value="Ve"><div class="day-label">Ve</div></label>
+                    <label><input type="checkbox" class="day-check" value="Sa"><div class="day-label">Sa</div></label>
+                    <label><input type="checkbox" class="day-check" value="Di"><div class="day-label">Di</div></label>
                 </div>
-                <button class="btn" onclick="saveNewPlan()">Ajouter au planning</button>
+                <button class="btn" onclick="saveNewPlan()">Enregistrer</button>
             </div>
             <div id="plan-list"></div>
         </main>
 
         <main id="view-settings" class="view">
             <div class="card">
-                <h3>🎨 Style de l'Application</h3>
+                <h3>Styles & Ambiances</h3>
                 <select id="theme-select" class="input-box">
                     <option value="theme-cyber">Cyber Night (Néon)</option>
                     <option value="theme-nature">Nature Soft (Zen)</option>
-                    <option value="theme-sunset">Sunset Orange (Chaud)</option>
+                    <option value="theme-noah">🍺 Thème Noah (Pression)</option>
                     <option value="theme-matrix">Matrix Terminal (Rétro)</option>
                 </select>
             </div>
             <div class="card">
-                <h3>🌍 Localisation</h3>
-                <input type="text" id="city-in" class="input-box" placeholder="Ville pour la météo">
+                <h3>Paramètres</h3>
+                <input type="text" id="city-in" class="input-box" placeholder="Ville">
+                <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)">
             </div>
-            <div class="card">
-                <h3>⚙️ Paramètres Cuve</h3>
-                <input type="number" id="max-in" class="input-box" placeholder="Capacité en Litres">
-            </div>
-            <button class="btn" onclick="saveSettings()">Appliquer les changements</button>
+            <button class="btn" onclick="saveSettings()">Appliquer</button>
         </main>
 
         <nav class="bottom-nav">
@@ -186,14 +190,12 @@
         const SmartEngine = {
             timer: null,
             async boost(mins) {
-                if (AppState.isRaining && document.getElementById('rain-toggle').checked) return showToast("Pluie détectée : Arrosage annulé ☔");
-                if (AppState.volume <= 0.2) return showToast("Erreur : Cuve vide ! ❌");
+                if (AppState.isRaining && document.getElementById('rain-toggle').checked) return showToast("Pluie : Arrosage bloqué ☔");
+                if (AppState.volume <= 0.2) return showToast("Fût vide ! ❌");
                 
                 await sendPump(true);
                 document.getElementById('active-banner').style.display = 'block';
                 document.getElementById('stop-btn').style.display = 'block';
-                showToast(`Boost activé : ${mins} minutes`);
-                
                 this.timer = setTimeout(() => this.stop(true), mins * 60000);
             },
             async stop(done = false) {
@@ -201,7 +203,7 @@
                 await sendPump(false);
                 document.getElementById('active-banner').style.display = 'none';
                 document.getElementById('stop-btn').style.display = 'none';
-                showToast(done ? "Arrosage terminé ✅" : "Arrosage interrompu 🛑");
+                showToast(done ? "Terminé !" : "Stoppé !");
             }
         };
 
@@ -211,28 +213,29 @@
                 const data = await res.json();
                 
                 AppState.volume = parseFloat(data.volume_eau);
-                const pct = (AppState.volume / AppState.maxVolume) * 100;
-                document.getElementById('water-level').style.height = Math.min(pct, 100) + "%";
+                document.getElementById('water-level').style.height = Math.min((AppState.volume/AppState.maxVolume)*100, 100) + "%";
                 
                 const txt = document.getElementById('vol-txt');
-                if (AppState.volume <= 0.2) {
-                    txt.innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
-                    if (data.pompe_etat) await sendPump(false); // Sécurité matériel
-                } else {
-                    txt.textContent = AppState.volume.toFixed(1) + " L";
-                }
+                txt.textContent = AppState.volume <= 0.2 ? "VIDE !" : AppState.volume.toFixed(1) + " L";
 
                 document.getElementById('pump-toggle').checked = data.pompe_etat;
-                document.getElementById('pump-label').textContent = data.pompe_etat ? "POMPE ACTIVE" : "Pompe à l'arrêt";
                 
-                const b = document.getElementById('badge');
-                b.style.color = "#10b981"; b.textContent = "● Connecté";
+                // Mots spécifiques Thème Noah
+                if(document.body.className === 'theme-noah') {
+                    document.getElementById('pump-label').textContent = data.pompe_etat ? "TIREUSE ACTIVE" : "Tireuse fermée";
+                    document.getElementById('active-banner').textContent = "🍺 SERVICE EN COURS...";
+                } else {
+                    document.getElementById('pump-label').textContent = data.pompe_etat ? "POMPE ACTIVE" : "Pompe à l'arrêt";
+                    document.getElementById('active-banner').textContent = "💧 ARROSAGE EN COURS...";
+                }
 
                 if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
                     AppState.schedules = data.planning || [];
                     renderPlans();
                 }
-            } catch(e) { document.getElementById('badge').textContent = "● Hors ligne"; }
+                document.getElementById('badge').style.color = "#10b981";
+                document.getElementById('badge').textContent = "● Connecté";
+            } catch(e) { document.getElementById('badge').textContent = "● Erreur"; }
         }
 
         async function sendPump(s) {
@@ -250,10 +253,9 @@
                 if(!g.results) return;
                 const { latitude, longitude, name } = g.results[0];
                 const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`)).json();
-                
                 AppState.isRaining = w.current_weather.weathercode >= 51;
                 document.getElementById('w-city').textContent = name;
-                document.getElementById('w-desc').textContent = `${w.current_weather.temperature}°C - ${AppState.isRaining ? 'Pluie' : 'Sec'}`;
+                document.getElementById('w-desc').textContent = `${w.current_weather.temperature}°C - ${AppState.isRaining ? 'Pluie ☔' : 'Sec ☀️'}`;
                 document.getElementById('w-icon').textContent = AppState.isRaining ? '🌧️' : '☀️';
             } catch(e) {}
         }
@@ -261,18 +263,20 @@
         async function saveNewPlan() {
             const time = document.getElementById('time-in').value;
             const duration = document.getElementById('dur-in').value;
-            if(!time || !duration) return showToast("Veuillez remplir l'heure et la durée");
+            const days = Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value);
             
-            AppState.schedules.push({ time, duration, days: ["Lu","Ma","Me","Je","Ve","Sa","Di"] });
+            if(!time || !duration || days.length === 0) return showToast("Jours ou heure manquants !");
+            
+            AppState.schedules.push({ time, duration, days });
             await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
             renderPlans();
-            showToast("Planning mis à jour");
+            showToast("Plannifié !");
         }
 
         function renderPlans() {
             const cont = document.getElementById('plan-list'); cont.innerHTML = "";
             AppState.schedules.forEach((p, i) => {
-                cont.innerHTML += `<div class="list-item"><span><b>${p.time}</b> (${p.duration}m)</span><button onclick="delPlan(${i})" style="border:none; background:none; color:#ef4444; font-weight:bold; padding:0 10px;">✖</button></div>`;
+                cont.innerHTML += `<div class="list-item"><span><b>${p.time}</b> (${p.duration}m) - ${p.days.join(',')}</span><button onclick="delPlan(${i})" style="border:none; background:none; color:red; font-weight:bold;">✖</button></div>`;
             });
         }
 
@@ -290,12 +294,19 @@
             if(c) { AppState.city = c; localStorage.setItem('city', c); }
             if(m) { AppState.maxVolume = m; localStorage.setItem('max_v', m); document.getElementById('max-txt').textContent = m; }
             
-            // Appliquer thème
             document.body.className = t;
             localStorage.setItem('arrosage_theme', t);
             
+            if(t === 'theme-noah') {
+                document.getElementById('main-title').textContent = "Noah Tavern 🍺";
+                document.getElementById('tank-label').textContent = "Fût de Pression";
+            } else {
+                document.getElementById('main-title').textContent = "Arrosage 2000";
+                document.getElementById('tank-label').textContent = "Réserve de Liquide";
+            }
+
             fetchWeather();
-            showToast("Paramètres sauvegardés !");
+            showToast("Réglages sauvés !");
         }
 
         function showView(id, btn) {
@@ -311,10 +322,14 @@
         }
 
         window.onload = () => {
-            // Restore Settings
             const savedTheme = localStorage.getItem('arrosage_theme') || 'theme-cyber';
             document.body.className = savedTheme;
             document.getElementById('theme-select').value = savedTheme;
+            if(savedTheme === 'theme-noah') {
+                document.getElementById('main-title').textContent = "Noah Tavern 🍺";
+                document.getElementById('tank-label').textContent = "Fût de Pression";
+            }
+
             document.getElementById('max-in').value = AppState.maxVolume;
             document.getElementById('max-txt').textContent = AppState.maxVolume;
             document.getElementById('city-in').value = AppState.city;
@@ -322,12 +337,14 @@
             fetchWeather(); fetchAll();
             setInterval(fetchAll, 4000);
             
-            // Check Planning
             setInterval(() => {
                 const now = new Date();
                 const cur = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+                const days = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+                const curDay = days[now.getDay()];
+
                 AppState.schedules.forEach(p => {
-                    if(p.time === cur && AppState.lastTrigger !== cur) {
+                    if(p.time === cur && p.days.includes(curDay) && AppState.lastTrigger !== cur) {
                         AppState.lastTrigger = cur;
                         SmartEngine.boost(parseInt(p.duration));
                     }
