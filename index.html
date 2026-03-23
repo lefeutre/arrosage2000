@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Arrosage 2000 Smart</title>
     <style>
-        /* --- Thèmes et Variables --- */
         :root {
             --bg-color: #080c16; --surface: #151e32; --surface-alt: rgba(255, 255, 255, 0.03);
             --text-main: #f8fafc; --text-sec: #94a3b8; --primary: #0ea5e9; --primary-light: #38bdf8;
@@ -13,447 +12,314 @@
             --border: rgba(255, 255, 255, 0.08); --nav-bg: rgba(8, 12, 22, 0.85); --radius: 20px;
         }
 
-        /* Thème clair corrigé */
         body.light-theme {
             --bg-color: #f1f5f9; --surface: #ffffff; --surface-alt: rgba(0, 0, 0, 0.04);
-            --text-main: #0f172a; --text-sec: #64748b; --border: rgba(0, 0, 0, 0.08);
+            --text-main: #0f172a; --text-sec: #64748b; --border: rgba(0, 0, 0, 0.1);
             --nav-bg: rgba(255, 255, 255, 0.9);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-
-        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; justify-content: center; transition: background-color 0.3s; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 110px; display: flex; justify-content: center; transition: background 0.3s; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
         
-        header { padding: max(20px, env(safe-area-inset-top)) 20px 15px; display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-size: 1.4rem; font-weight: 800; background: linear-gradient(90deg, var(--primary-light), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px;}
-        .french-flag { display: inline-block; width: 22px; height: 15px; background: linear-gradient(90deg, #002395 33.33%, #ffffff 33.33%, #ffffff 66.66%, #ed2939 66.66%); border-radius: 2px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 1.4rem; font-weight: 800; color: var(--primary-light); display: flex; align-items: center; gap: 8px; }
         
-        .view { display: none; padding: 0 15px 15px; animation: fadeUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .view { display: none; padding: 0 15px; animation: fadeUp 0.3s ease-out; }
         .view.active { display: block; }
-        @keyframes fadeUp { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-        .card h3 { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        
+        /* Bannière d'activité */
+        #active-banner { display: none; background: rgba(14, 165, 233, 0.2); border: 1px solid var(--primary-light); color: var(--primary-light); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        .weather-widget { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .weather-icon { font-size: 2rem; }
-        .weather-info { flex: 1; }
-        .weather-info strong { display: block; font-size: 0.95rem; }
-        .weather-info span { font-size: 0.8rem; color: var(--text-sec); }
+        /* Cuve */
+        .tank-mini { width: 100px; height: 160px; border: 4px solid var(--border); border-radius: 12px 12px 24px 24px; margin: 10px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.1); }
+        .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s, background 0.3s; }
+        .tank-val { font-size: 2rem; font-weight: 800; margin-top: 10px; }
 
-        .tank-container { text-align: center; }
-        .tank-mini { width: 100px; height: 160px; border: 4px solid var(--border); border-radius: 12px 12px 24px 24px; margin: 0 auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.1); }
-        .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s, background 0.5s; }
-        .water-mini::after { content: ''; position: absolute; top: -5px; left: -20px; right: -20px; height: 10px; background: rgba(255,255,255,0.25); border-radius: 50%; animation: wave 3s ease-in-out infinite alternate; }
-        @keyframes wave { 0% { transform: translate3d(-5px, 2px, 0); } 100% { transform: translate3d(5px, -2px, 0); } }
-        .tank-val { margin-top: 15px; font-weight: 800; font-size: 1.8rem; line-height: 1.2; }
-        .tank-max { font-size: 0.85rem; color: var(--text-sec); }
-
-        .switch-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
-        .switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
+        /* Inputs & Buttons */
+        .switch { position: relative; width: 52px; height: 30px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(150,150,150,0.2); border-radius: 30px; transition: .3s; }
-        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: #fff; border-radius: 50%; transition: transform .3s; }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translate3d(22px, 0, 0); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #334155; border-radius: 30px; transition: .3s; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .3s; }
+        input:checked + .slider { background: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
 
-        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
-        input[type="time"], input[type="number"], input[type="text"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; }
+        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-boost { flex: 1; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 10px; font-size: 0.85rem; }
+        .btn-boost:active { background: var(--primary); color: white; }
+
+        .input-box { width: 100%; padding: 12px; border-radius: 10px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); margin-bottom: 10px; outline: none; }
         
-        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
-        .day-checkbox { display: none; }
-        .day-label { height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surface-alt); color: var(--text-sec); font-weight: 600; font-size: 0.85rem; border: 1px solid transparent; transition: 0.2s; }
-        .day-checkbox:checked + .day-label { background: rgba(14, 165, 233, 0.15); color: var(--primary-light); border-color: var(--primary); }
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 15px 0; }
+        .day-check { display: none; }
+        .day-label { padding: 10px 0; text-align: center; background: var(--surface-alt); border-radius: 8px; font-size: 0.8rem; font-weight: bold; color: var(--text-sec); border: 1px solid transparent; }
+        .day-check:checked + .day-label { background: rgba(14, 165, 233, 0.2); color: var(--primary-light); border-color: var(--primary); }
 
-        .btn { width: 100%; height: 50px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
-        .btn-outline { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); }
-        .btn:active { transform: scale(0.97); }
-
-        #active-task-banner { display: none; padding: 12px; background: rgba(14, 165, 233, 0.1); border-bottom: 1px solid var(--primary-light); color: var(--primary-light); font-size: 0.85rem; font-weight: 700; text-align: center; animation: pulseGlow 2s infinite; }
-        @keyframes pulseGlow { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
-
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); z-index: 1000; }
-        .nav-item { width: 60px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; color: var(--text-sec); background: none; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;}
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0 calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+        .nav-item { border: none; background: none; color: var(--text-sec); font-size: 0.75rem; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
         .nav-item.active { color: var(--primary-light); }
-        .nav-icon { font-size: 1.3rem; }
+        .nav-icon { font-size: 1.4rem; }
 
-        #toast { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); left: 50%; transform: translate3d(-50%, 20px, 0); opacity: 0; background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; z-index: 2000; pointer-events: none; }
-        #toast.show { transform: translate3d(-50%, 0, 0); opacity: 1; }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-weight: bold; opacity: 0; transition: 0.3s; z-index: 9999; }
+        #toast.show { opacity: 1; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
         <header>
-            <div class="header-title">Arrosage 2000 <span class="french-flag"></span></div>
-            <div id="connexion-badge" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600;">● Init...</div>
+            <div class="header-title">Arrosage 2000 🇫🇷</div>
+            <div id="badge" style="font-size: 0.85rem; font-weight: bold;">● Init...</div>
         </header>
-        
-        <div id="active-task-banner">🌱 Arrosage intelligent en cours...</div>
+
+        <div id="active-banner">🌊 ARROSAGE EN COURS...</div>
 
         <main id="view-home" class="view active">
-            <section class="card" style="padding: 15px;">
-                <div class="weather-widget">
-                    <div class="weather-icon" id="weather-icon">🌤️</div>
-                    <div class="weather-info">
-                        <strong>Météo : <span id="weather-city-display">Chargement...</span></strong>
-                        <span id="weather-desc">Recherche des données...</span>
+            <div class="card">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span id="w-icon" style="font-size: 2.5rem;">🌤️</span>
+                    <div>
+                        <strong id="w-city">Molsheim</strong><br>
+                        <span id="w-desc" style="color: var(--text-sec);">Chargement...</span>
                     </div>
                 </div>
-                <div class="switch-row" style="min-height: auto;">
-                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-sec);">Désactiver si pluie annoncée</span>
-                    <label class="switch" style="transform: scale(0.85); transform-origin: right;">
-                        <input type="checkbox" id="smart-weather-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <small>Désactiver si pluie annoncée</small>
+                    <label class="switch"><input type="checkbox" id="rain-toggle" checked><span class="slider"></span></label>
                 </div>
-            </section>
+            </div>
 
-            <section class="card tank-container">
-                <h3>💧 Réserve d'Eau</h3>
-                <div class="tank-mini">
-                    <div class="water-mini" id="water-level" style="height: 0%;"></div>
-                </div>
-                <div class="tank-val" id="volume-display">
-                    <span id="volume-val">--</span> L
-                </div>
-                <div class="tank-max">Capacité : <span id="display-max-tank">50</span> L</div>
-                <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 10px;">Dernière synchro : <span id="last-sync-time">--:--</span></div>
-            </section>
+            <div class="card" style="text-align: center;">
+                <h3>Réserve d'Eau</h3>
+                <div class="tank-mini"><div id="water-level" class="water-mini"></div></div>
+                <div class="tank-val" id="vol-txt">-- L</div>
+                <small style="color: var(--text-sec)">Capacité max : <span id="max-txt">50</span>L</small>
+            </div>
 
-            <section class="card">
-                <h3>⚙️ Contrôle Manuel</h3>
-                <div class="switch-row">
-                    <span style="font-weight: 600;" id="pump-txt">Connexion...</span>
-                    <label class="switch">
-                        <input type="checkbox" id="pump-toggle">
-                        <span class="slider"></span>
-                    </label>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <b id="pump-label">Pompe</b>
+                    <label class="switch"><input type="checkbox" id="pump-toggle"><span class="slider"></span></label>
                 </div>
-
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn btn-outline" id="btn-boost-5" style="height: 40px; font-size: 0.85rem;">⏱️ 5 min</button>
-                    <button class="btn btn-outline" id="btn-boost-15" style="height: 40px; font-size: 0.85rem;">⏱️ 15 min</button>
-                    <button class="btn btn-outline" id="btn-stop-task" style="height: 40px; font-size: 0.85rem; color: var(--danger); display: none;">🛑 STOP</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-boost" onclick="SmartEngine.boost(5)">⏱️ 5 min</button>
+                    <button class="btn-boost" onclick="SmartEngine.boost(15)">⏱️ 15 min</button>
+                    <button class="btn-boost" id="stop-btn" onclick="SmartEngine.stop()" style="color: var(--danger); display: none;">🛑 STOP</button>
                 </div>
-            </section>
+            </div>
         </main>
 
         <main id="view-plan" class="view">
-            <section class="card">
-                <h3>Nouveau Programme</h3>
-                <div class="input-row">
-                    <div class="input-group">
-                        <label>Heure de départ</label>
-                        <input type="time" id="time-in" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Durée (min)</label>
-                        <input type="number" id="dur-in" placeholder="Ex: 15" min="1" required>
-                    </div>
+            <div class="card">
+                <h3>Programmer un arrosage</h3>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <input type="time" id="time-in" class="input-box">
+                    <input type="number" id="dur-in" class="input-box" placeholder="Min">
                 </div>
                 <div class="days-grid">
-                    <label><input type="checkbox" class="day-checkbox" value="Lu"><div class="day-label">Lu</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Ma"><div class="day-label">Ma</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Me"><div class="day-label">Me</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Je"><div class="day-label">Je</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Ve"><div class="day-label">Ve</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Sa"><div class="day-label">Sa</div></label>
-                    <label><input type="checkbox" class="day-checkbox" value="Di"><div class="day-label">Di</div></label>
+                    <label><input type="checkbox" class="day-check" value="Lu"><div class="day-label">Lu</div></label>
+                    <label><input type="checkbox" class="day-check" value="Ma"><div class="day-label">Ma</div></label>
+                    <label><input type="checkbox" class="day-check" value="Me"><div class="day-label">Me</div></label>
+                    <label><input type="checkbox" class="day-check" value="Je"><div class="day-label">Je</div></label>
+                    <label><input type="checkbox" class="day-check" value="Ve"><div class="day-label">Ve</div></label>
+                    <label><input type="checkbox" class="day-check" value="Sa"><div class="day-label">Sa</div></label>
+                    <label><input type="checkbox" class="day-check" value="Di"><div class="day-label">Di</div></label>
                 </div>
-                <button class="btn" id="btn-save-plan">Ajouter au Planning</button>
-            </section>
-            <section class="card">
-                <h3>Programmes Actifs</h3>
-                <div id="plan-list-container"></div>
-            </section>
-        </main>
-
-        <main id="view-stats" class="view">
-            <section class="card">
-                <h3>Journal local</h3>
-                <div id="logs-container">
-                    <div style="text-align:center; padding: 15px; color: var(--text-sec); font-size: 0.85rem;">Aucun log récent.</div>
-                </div>
-            </section>
+                <button class="btn" onclick="saveNewPlan()">Ajouter au planning</button>
+            </div>
+            <div id="plan-list"></div>
         </main>
 
         <main id="view-settings" class="view">
-            <section class="card">
-                <h3>Configuration Matérielle</h3>
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Ville pour la météo</label>
-                    <input type="text" id="setting-city" placeholder="Saisissez une ville...">
+            <div class="card">
+                <h3>Météo</h3>
+                <label><small>Ville (ex: Paris, Molsheim...)</small></label>
+                <input type="text" id="city-in" class="input-box" placeholder="Nom de la ville">
+            </div>
+            <div class="card">
+                <h3>Matériel</h3>
+                <label><small>Volume cuve (Litres)</small></label>
+                <input type="number" id="max-in" class="input-box">
+            </div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <b>Thème Clair</b>
+                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label>
                 </div>
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Volume maximal de la cuve (Litres)</label>
-                    <input type="number" id="setting-tank-max" value="50">
-                </div>
-                <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder les réglages</button>
-            </section>
-
-            <section class="card">
-                <h3>Préférences</h3>
-                <div class="switch-row">
-                    <span style="font-weight: 600;">Thème Clair</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </section>
+            </div>
+            <button class="btn" onclick="saveSettings()">Sauvegarder les réglages</button>
         </main>
 
         <nav class="bottom-nav">
-            <button class="nav-item active" data-target="view-home"><div class="nav-icon">🏠</div>Accueil</button>
-            <button class="nav-item" data-target="view-plan"><div class="nav-icon">📅</div>Planning</button>
-            <button class="nav-item" data-target="view-stats"><div class="nav-icon">📋</div>Journal</button>
-            <button class="nav-item" data-target="view-settings"><div class="nav-icon">⚙️</div>Réglages</button>
+            <button class="nav-item active" onclick="showView('view-home', this)"><span class="nav-icon">🏠</span>Accueil</button>
+            <button class="nav-item" onclick="showView('view-plan', this)"><span class="nav-icon">📅</span>Planning</button>
+            <button class="nav-item" onclick="showView('view-settings', this)"><span class="nav-icon">⚙️</span>Réglages</button>
         </nav>
-
         <div id="toast">Message</div>
     </div>
 
     <script>
         const AppState = {
-            waterMax: parseInt(localStorage.getItem('arrosage_tank_max')) || 50,
-            waterCurrent: 0,
-            schedules: [],
-            isRaining: false,
-            lastTriggeredTime: ""
+            volume: 0, maxVolume: parseInt(localStorage.getItem('max_v')) || 50,
+            isRaining: false, schedules: [], city: localStorage.getItem('city') || 'Molsheim'
         };
 
-        const DOM = {
-            toast: document.getElementById('toast'),
-            waterLevel: document.getElementById('water-level'),
-            volumeVal: document.getElementById('volume-val'),
-            volumeDisplay: document.getElementById('volume-display'),
-            displayMaxTank: document.getElementById('display-max-tank'),
-            inputTankMax: document.getElementById('setting-tank-max'),
-            pumpToggle: document.getElementById('pump-toggle'),
-            pumpTxt: document.getElementById('pump-txt'),
-            badge: document.getElementById('connexion-badge'),
-            navItems: document.querySelectorAll('.nav-item'),
-            views: document.querySelectorAll('.view'),
-            planList: document.getElementById('plan-list-container'),
-            btnBoost5: document.getElementById('btn-boost-5'),
-            btnBoost15: document.getElementById('btn-boost-15'),
-            btnStop: document.getElementById('btn-stop-task'),
-            banner: document.getElementById('active-task-banner'),
-            lastSyncTime: document.getElementById('last-sync-time'),
-            weatherToggle: document.getElementById('smart-weather-toggle'),
-            themeToggle: document.getElementById('theme-toggle'),
-            inputCity: document.getElementById('setting-city')
-        };
-
-        function showToast(msg) {
-            DOM.toast.textContent = msg;
-            DOM.toast.classList.add('show');
-            setTimeout(() => DOM.toast.classList.remove('show'), 2500);
-        }
-
-        // --- GESTION DU THEME (CORRIGÉ) ---
-        DOM.themeToggle.addEventListener('change', (e) => {
-            document.body.classList.toggle('light-theme', e.target.checked);
-            localStorage.setItem('arrosage_theme', e.target.checked ? 'light' : 'dark');
-        });
-
-        // Navigation
-        DOM.navItems.forEach(btn => {
-            btn.addEventListener('click', () => {
-                DOM.navItems.forEach(b => b.classList.remove('active'));
-                DOM.views.forEach(v => v.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.target).classList.add('active');
-            });
-        });
-
-        // UI Cuve & Alertes
-        function updateWater(liters) {
-            AppState.waterCurrent = Math.max(0, Math.min(liters, AppState.waterMax));
-            const pct = (AppState.waterCurrent / AppState.waterMax) * 100;
-            DOM.waterLevel.style.height = `${pct}%`;
-
-            if (AppState.waterCurrent <= 0.1) {
-                DOM.volumeDisplay.innerHTML = `<span style="color:var(--danger); font-weight:800;">VIDE !</span><br><small style="color:var(--text-sec); font-size:0.7rem;">Remplissage requis</small>`;
-                DOM.waterLevel.style.background = "var(--danger)";
-            } else if (AppState.waterCurrent < 5) {
-                DOM.volumeDisplay.innerHTML = `<span style="color:var(--warning); font-weight:800;">${AppState.waterCurrent.toFixed(1)} L</span><br><small style="color:var(--text-sec); font-size:0.7rem;">Niveau Critique</small>`;
-                DOM.waterLevel.style.background = "var(--warning)";
-            } else {
-                DOM.volumeDisplay.innerHTML = `<span style="font-weight:800;">${AppState.waterCurrent.toFixed(1)}</span> L`;
-                DOM.waterLevel.style.background = "linear-gradient(180deg, var(--primary-light), var(--primary))";
+        const SmartEngine = {
+            timer: null,
+            async boost(mins) {
+                if (AppState.isRaining && document.getElementById('rain-toggle').checked) return showToast("Bloqué : Il pleut ! ☔");
+                if (AppState.volume <= 0.1) return showToast("Erreur : Cuve vide !");
+                
+                showToast(`Boost lancé pour ${mins} min`);
+                document.getElementById('active-banner').style.display = 'block';
+                document.getElementById('stop-btn').style.display = 'block';
+                await sendPump(true);
+                this.timer = setTimeout(() => this.stop(true), mins * 60000);
+            },
+            async stop(done = false) {
+                clearTimeout(this.timer);
+                await sendPump(false);
+                document.getElementById('active-banner').style.display = 'none';
+                document.getElementById('stop-btn').style.display = 'none';
+                showToast(done ? "Arrosage terminé ✅" : "Arrosage stoppé 🛑");
             }
-        }
+        };
 
-        async function fetchSystemStatus() {
+        async function fetchAll() {
             try {
                 const res = await fetch('/.netlify/functions/get-status');
                 const data = await res.json();
                 
-                updateWater(parseFloat(data.volume_eau));
+                // Volume & Sécurité
+                AppState.volume = parseFloat(data.volume_eau);
+                const pct = (AppState.volume / AppState.maxVolume) * 100;
+                document.getElementById('water-level').style.height = pct + "%";
                 
-                // --- SÉCURITÉ CUVE VIDE ---
-                if (AppState.waterCurrent <= 0.1 && data.pompe_etat) {
-                    await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: false }) });
-                    showToast("Sécurité : Cuve vide, arrêt pompe !");
-                }
-
-                if (!SmartEngine.isActive) {
-                    DOM.pumpToggle.checked = data.pompe_etat;
-                    DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Prêt à arroser";
-                }
-                
-                if (data.pompe_etat) {
-                    DOM.badge.innerHTML = `● <span style="color:var(--success)">POMPE ACTIVE</span>`;
+                const txt = document.getElementById('vol-txt');
+                if (AppState.volume <= 0.1) {
+                    txt.innerHTML = "<span style='color:var(--danger)'>VIDE !</span>";
+                    document.getElementById('water-level').style.background = "var(--danger)";
+                    if (data.pompe_etat) await sendPump(false); // Force l'arrêt
                 } else {
-                    DOM.badge.innerHTML = `● Connecté`;
-                    DOM.badge.style.color = "var(--success)";
+                    txt.textContent = AppState.volume.toFixed(1) + " L";
+                    document.getElementById('water-level').style.background = (AppState.volume < 5) ? "var(--warning)" : "linear-gradient(180deg, var(--primary-light), var(--primary))";
                 }
 
-                if (data.planning) { 
-                    if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
-                        AppState.schedules = data.planning;
-                        renderSchedules();
-                    }
+                // Pompe Status
+                document.getElementById('pump-toggle').checked = data.pompe_etat;
+                document.getElementById('pump-label').textContent = data.pompe_etat ? "POMPE ACTIVE" : "Prêt à arroser";
+                
+                // Badge & Planning Sync
+                document.getElementById('badge').style.color = "#10b981";
+                document.getElementById('badge').textContent = "● Connecté";
+                if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
+                    AppState.schedules = data.planning || [];
+                    renderPlans();
                 }
-                DOM.lastSyncTime.textContent = new Date().toLocaleTimeString('fr-FR');
-            } catch(e) {
-                DOM.badge.innerHTML = `● DÉCONNECTÉ`;
-                DOM.badge.style.color = "var(--danger)";
-            }
+            } catch(e) { document.getElementById('badge').textContent = "● Hors ligne"; }
         }
 
-        const SmartEngine = {
-            isActive: false,
-            async start(mins) {
-                // SÉCURITÉ PLUIE (CORRIGÉ)
-                if (AppState.isRaining && DOM.weatherToggle.checked) {
-                    return showToast("Annulé : Il pleut ☔");
-                }
-                if (AppState.waterCurrent <= 0.1) {
-                    return showToast("Impossible : Cuve vide !");
-                }
+        async function sendPump(s) {
+            await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: s }) });
+        }
 
-                this.isActive = true;
-                DOM.banner.style.display = 'block';
-                DOM.btnStop.style.display = 'block';
-                await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: true }) });
-                this.timer = setTimeout(() => this.stop(true), mins * 60000);
-            },
-            async stop(done = false) {
-                this.isActive = false;
-                clearTimeout(this.timer);
-                await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: false }) });
-                DOM.banner.style.display = 'none'; 
-                DOM.btnStop.style.display = 'none';
-                showToast(done ? "Arrosage fini !" : "Arrêté !");
-            }
+        document.getElementById('pump-toggle').onchange = (e) => {
+            if (e.target.checked && AppState.volume <= 0.1) { e.target.checked = false; return showToast("Impossible : Cuve vide !"); }
+            sendPump(e.target.checked);
         };
 
-        DOM.pumpToggle.addEventListener('change', async (e) => {
-            if (e.target.checked && AppState.isRaining && DOM.weatherToggle.checked) {
-                e.target.checked = false;
-                return showToast("Blocage : Il pleut ! ☔");
-            }
-            if (e.target.checked && AppState.waterCurrent <= 0.1) {
-                e.target.checked = false;
-                return showToast("Blocage : Cuve vide !");
-            }
-            await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: e.target.checked }) });
-        });
-
-        DOM.btnBoost5.addEventListener('click', () => SmartEngine.start(5));
-        DOM.btnBoost15.addEventListener('click', () => SmartEngine.start(15));
-        DOM.btnStop.addEventListener('click', () => SmartEngine.stop());
-
-        function verifierPlanning() {
-            if (SmartEngine.isActive) return;
-            const now = new Date();
-            const jours = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
-            const heureActuelle = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-            
-            AppState.schedules.forEach(plan => {
-                if (plan.days.includes(jours[now.getDay()]) && plan.time === heureActuelle) {
-                    if (AppState.lastTriggeredTime !== heureActuelle) {
-                        AppState.lastTriggeredTime = heureActuelle;
-                        SmartEngine.start(parseInt(plan.duration));
-                    }
-                }
-            });
-        }
-
         async function fetchWeather() {
-            const city = localStorage.getItem('arrosage_city') || 'Molsheim';
             try {
-                const geo = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)).json();
-                const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.results[0].latitude}&longitude=${geo.results[0].longitude}&current_weather=true`)).json();
+                const geo = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${AppState.city}&count=1`)).json();
+                if(!geo.results) return;
+                const { latitude, longitude, name } = geo.results[0];
+                const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`)).json();
+                
                 AppState.isRaining = w.current_weather.weathercode >= 51;
-                document.getElementById('weather-city-display').textContent = geo.results[0].name;
-                document.getElementById('weather-desc').textContent = `${w.current_weather.temperature}°C - ${AppState.isRaining ? 'Pluie' : 'Sec'}`;
-                document.getElementById('weather-icon').textContent = AppState.isRaining ? '🌧️' : '🌤️';
+                document.getElementById('w-city').textContent = name;
+                document.getElementById('w-desc').textContent = `${w.current_weather.temperature}°C - ${AppState.isRaining ? 'Pluie ☔' : 'Sec ☀️'}`;
+                document.getElementById('w-icon').textContent = AppState.isRaining ? '🌧️' : '☀️';
             } catch(e) {}
         }
 
-        function renderSchedules() {
-            DOM.planList.innerHTML = '';
+        async function saveNewPlan() {
+            const time = document.getElementById('time-in').value;
+            const duration = document.getElementById('dur-in').value;
+            const days = Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value);
+            if(!time || !duration || days.length === 0) return showToast("Complète tous les champs !");
+            
+            AppState.schedules.push({ time, duration, days });
+            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
+            renderPlans();
+            showToast("Planning enregistré !");
+        }
+
+        function renderPlans() {
+            const cont = document.getElementById('plan-list'); cont.innerHTML = "";
             AppState.schedules.forEach((p, i) => {
-                const d = document.createElement('div'); d.className = 'list-item';
-                d.innerHTML = `<div><b>${p.days.join(', ')}</b><br>${p.time} (${p.duration} min)</div><button onclick="delPlan(${i})" style="background:none; border:none; color:var(--danger); font-weight:bold;">✖</button>`;
-                DOM.planList.appendChild(d);
+                cont.innerHTML += `<div class="list-item"><span><b>${p.time}</b> (${p.duration}m) - ${p.days.join(',')}</span><button onclick="delPlan(${i})" style="border:none; background:none; color:red; font-weight:bold;">✖</button></div>`;
             });
         }
 
         async function delPlan(i) {
             AppState.schedules.splice(i, 1);
-            renderSchedules();
             await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
+            renderPlans();
         }
 
-        document.getElementById('btn-save-plan').addEventListener('click', async () => {
-            const days = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => cb.value);
-            const time = document.getElementById('time-in').value;
-            const dur = document.getElementById('dur-in').value;
-            if (!time || !dur || days.length === 0) return showToast("Champs vides !");
-            AppState.schedules.push({ time, duration: dur, days });
-            renderSchedules();
-            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
-            showToast("Planning enregistré !");
-        });
-
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            const newMax = parseInt(DOM.inputTankMax.value);
-            if(newMax > 0) {
-                AppState.waterMax = newMax;
-                localStorage.setItem('arrosage_tank_max', newMax);
-                DOM.displayMaxTank.textContent = newMax;
-            }
-            localStorage.setItem('arrosage_city', DOM.inputCity.value);
+        function saveSettings() {
+            const newCity = document.getElementById('city-in').value;
+            const newMax = document.getElementById('max-in').value;
+            if(newCity) { AppState.city = newCity; localStorage.setItem('city', newCity); }
+            if(newMax) { AppState.maxVolume = newMax; localStorage.setItem('max_v', newMax); document.getElementById('max-txt').textContent = newMax; }
             fetchWeather();
-            showToast("Réglages sauvegardés");
-        });
+            showToast("Réglages sauvegardés !");
+        }
+
+        function showView(id, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
 
         window.onload = () => {
-            // Init Thème
-            const savedTheme = localStorage.getItem('arrosage_theme');
-            if(savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-                DOM.themeToggle.checked = true;
-            }
-            
-            // Init Champs
-            DOM.inputCity.value = localStorage.getItem('arrosage_city') || 'Molsheim';
-            DOM.inputTankMax.value = AppState.waterMax;
-            DOM.displayMaxTank.textContent = AppState.waterMax;
+            // Thème Init
+            if(localStorage.getItem('arrosage_theme') === 'light') { document.body.classList.add('light-theme'); document.getElementById('theme-toggle').checked = true; }
+            document.getElementById('theme-toggle').onchange = (e) => {
+                document.body.classList.toggle('light-theme', e.target.checked);
+                localStorage.setItem('arrosage_theme', e.target.checked ? 'light' : 'dark');
+            };
 
-            fetchWeather(); fetchSystemStatus();
-            setInterval(fetchSystemStatus, 4000);
-            setInterval(verifierPlanning, 30000);
+            document.getElementById('max-in').value = AppState.maxVolume;
+            document.getElementById('max-txt').textContent = AppState.maxVolume;
+            document.getElementById('city-in').value = AppState.city;
+
+            fetchWeather(); fetchAll();
+            setInterval(fetchAll, 4000);
+            
+            // Horloge Planning (Vérification toutes les 30s)
+            setInterval(() => {
+                const now = new Date();
+                const curTime = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+                const days = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+                const curDay = days[now.getDay()];
+
+                AppState.schedules.forEach(p => {
+                    if(p.time === curTime && p.days.includes(curDay) && AppState.lastTime !== curTime) {
+                        AppState.lastTime = curTime;
+                        SmartEngine.boost(parseInt(p.duration));
+                    }
+                });
+            }, 30000);
         };
     </script>
 </body>
