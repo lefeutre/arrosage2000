@@ -35,23 +35,20 @@
         .card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         .card h3 { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
 
-        /* --- Météo Widget --- */
         .weather-widget { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
         .weather-icon { font-size: 2rem; }
         .weather-info { flex: 1; }
         .weather-info strong { display: block; font-size: 0.95rem; }
         .weather-info span { font-size: 0.8rem; color: var(--text-sec); }
 
-        /* --- Cuve --- */
         .tank-container { text-align: center; }
         .tank-mini { width: 100px; height: 160px; border: 4px solid var(--border); border-radius: 12px 12px 24px 24px; margin: 0 auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.1); }
         .water-mini { position: absolute; bottom: 0; width: 100%; background: linear-gradient(180deg, var(--primary-light), var(--primary)); transition: height 1s, background 0.5s; }
         .water-mini::after { content: ''; position: absolute; top: -5px; left: -20px; right: -20px; height: 10px; background: rgba(255,255,255,0.25); border-radius: 50%; animation: wave 3s ease-in-out infinite alternate; }
         @keyframes wave { 0% { transform: translate3d(-5px, 2px, 0); } 100% { transform: translate3d(5px, -2px, 0); } }
-        .tank-val { margin-top: 15px; font-weight: 800; font-size: 1.8rem; }
+        .tank-val { margin-top: 15px; font-weight: 800; font-size: 1.8rem; line-height: 1.2; }
         .tank-max { font-size: 0.85rem; color: var(--text-sec); }
 
-        /* --- Switch --- */
         .switch-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
         .switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -60,35 +57,30 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translate3d(22px, 0, 0); }
 
-        /* --- Formulaires --- */
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .input-group label { font-size: 0.8rem; color: var(--text-sec); font-weight: 600; }
-        input[type="time"], input[type="number"], input[type="text"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus { border-color: var(--primary-light); }
+        input[type="time"], input[type="number"], input[type="text"], select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); color: var(--text-main); font-size: 1rem; outline: none; }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
         .day-checkbox { display: none; }
-        .day-label { height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surface-alt); color: var(--text-sec); font-weight: 600; font-size: 0.85rem; border: 1px solid transparent; transition: 0.2s; }
+        .day-label { height: 40px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surface-alt); color: var(--text-sec); font-weight: 600; font-size: 0.85rem; border: 1px solid transparent; }
         .day-checkbox:checked + .day-label { background: rgba(14, 165, 233, 0.15); color: var(--primary-light); border-color: var(--primary); }
 
-        .btn { width: 100%; height: 50px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.97); }
+        .btn { width: 100%; height: 50px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; }
         .btn-outline { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-main); }
-        .btn-outline:active { background: var(--border); }
 
         #active-task-banner { display: none; padding: 12px; background: rgba(14, 165, 233, 0.1); border-bottom: 1px solid var(--primary-light); color: var(--primary-light); font-size: 0.85rem; font-weight: 700; text-align: center; animation: pulseGlow 2s infinite; }
-        @keyframes pulseGlow { 0% { opacity: 0.8; } 50% { opacity: 1; background: rgba(14, 165, 233, 0.2); } 100% { opacity: 0.8; } }
+        @keyframes pulseGlow { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-alt); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
         
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--nav-bg); backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); z-index: 1000; }
         .nav-item { width: 60px; height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; color: var(--text-sec); background: none; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;}
         .nav-item.active { color: var(--primary-light); }
-        .nav-icon { font-size: 1.3rem; transition: transform 0.2s; }
-        .nav-item.active .nav-icon { transform: translateY(-2px); }
+        .nav-icon { font-size: 1.3rem; }
 
-        #toast { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); left: 50%; transform: translate3d(-50%, 20px, 0); opacity: 0; background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.9rem; pointer-events: none; transition: all 0.3s; z-index: 2000; }
+        #toast { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); left: 50%; transform: translate3d(-50%, 20px, 0); opacity: 0; background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; z-index: 2000; }
         #toast.show { transform: translate3d(-50%, 0, 0); opacity: 1; }
     </style>
 </head>
@@ -125,7 +117,9 @@
                 <div class="tank-mini">
                     <div class="water-mini" id="water-level" style="height: 0%;"></div>
                 </div>
-                <div class="tank-val"><span id="volume-val">--</span> L</div>
+                <div class="tank-val" id="volume-display">
+                    <span id="volume-val">--</span> L
+                </div>
                 <div class="tank-max">Capacité : <span id="display-max-tank">50</span> L</div>
                 <div style="font-size: 0.75rem; color: var(--text-sec); margin-top: 10px;">Dernière synchro : <span id="last-sync-time">--:--</span></div>
             </section>
@@ -198,36 +192,7 @@
                     <label>Volume maximal de la cuve (Litres)</label>
                     <input type="number" id="setting-tank-max" value="50">
                 </div>
-                
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Type de végétation</label>
-                    <select id="setting-plant-type">
-                        <option value="gazon">Gazon</option>
-                        <option value="potager">Potager</option>
-                        <option value="massif">Massif floral</option>
-                    </select>
-                </div>
-
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Nature du Sol</label>
-                    <select id="setting-soil-type">
-                        <option value="limoneux">Limon / Terreau (Continu)</option>
-                        <option value="argileux">Argile (Impulsions)</option>
-                        <option value="sableux">Sable (Court/Rapide)</option>
-                    </select>
-                </div>
                 <button class="btn" id="btn-save-settings" style="height: 40px; font-size: 0.9rem;">Sauvegarder les réglages</button>
-            </section>
-
-            <section class="card">
-                <h3>Préférences</h3>
-                <div class="switch-row">
-                    <span style="font-weight: 600;">Thème Clair</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
             </section>
         </main>
 
@@ -242,11 +207,10 @@
     </div>
 
     <script>
-        // --- ETAT GLOBAL ---
         const AppState = {
             waterMax: parseInt(localStorage.getItem('arrosage_tank_max')) || 50,
             waterCurrent: 0,
-            schedules: [], // Initialisé vide, sera rempli par la base de données
+            schedules: [],
             isRaining: false,
             lastTriggeredTime: ""
         };
@@ -255,6 +219,7 @@
             toast: document.getElementById('toast'),
             waterLevel: document.getElementById('water-level'),
             volumeVal: document.getElementById('volume-val'),
+            volumeDisplay: document.getElementById('volume-display'),
             displayMaxTank: document.getElementById('display-max-tank'),
             inputTankMax: document.getElementById('setting-tank-max'),
             pumpToggle: document.getElementById('pump-toggle'),
@@ -268,9 +233,7 @@
             btnStop: document.getElementById('btn-stop-task'),
             banner: document.getElementById('active-task-banner'),
             lastSyncTime: document.getElementById('last-sync-time'),
-            weatherToggle: document.getElementById('smart-weather-toggle'),
-            soilType: document.getElementById('setting-soil-type'),
-            plantType: document.getElementById('setting-plant-type')
+            weatherToggle: document.getElementById('smart-weather-toggle')
         };
 
         function showToast(msg) {
@@ -279,7 +242,6 @@
             setTimeout(() => DOM.toast.classList.remove('show'), 2500);
         }
 
-        // Navigation
         DOM.navItems.forEach(btn => {
             btn.addEventListener('click', () => {
                 DOM.navItems.forEach(b => b.classList.remove('active'));
@@ -289,47 +251,23 @@
             });
         });
 
+        // --- NOUVELLE LOGIQUE D'ALERTE WEB ---
         function updateWater(liters) {
             AppState.waterCurrent = Math.max(0, Math.min(liters, AppState.waterMax));
             const pct = (AppState.waterCurrent / AppState.waterMax) * 100;
+            
             DOM.waterLevel.style.height = `${pct}%`;
-            DOM.volumeVal.textContent = AppState.waterCurrent.toFixed(1);
-            DOM.waterLevel.style.background = (pct <= 15) ? "linear-gradient(180deg, #ef4444, #b91c1c)" : "linear-gradient(180deg, var(--primary-light), var(--primary))";
-        }
 
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            const newMax = parseInt(DOM.inputTankMax.value);
-            if(newMax > 0) {
-                AppState.waterMax = newMax;
-                localStorage.setItem('arrosage_tank_max', newMax);
-                DOM.displayMaxTank.textContent = newMax;
-                updateWater(AppState.waterCurrent);
+            if (AppState.waterCurrent <= 0) {
+                DOM.volumeDisplay.innerHTML = `<span style="color:var(--danger); font-weight:800;">VIDE !</span><br><small style="color:var(--text-sec); font-size:0.7rem;">Remplissage requis</small>`;
+                DOM.waterLevel.style.background = "var(--danger)";
+            } else if (AppState.waterCurrent < 5) {
+                DOM.volumeDisplay.innerHTML = `<span style="color:var(--warning); font-weight:800;">${AppState.waterCurrent.toFixed(1)} L</span><br><small style="color:var(--text-sec); font-size:0.7rem;">Niveau Critique</small>`;
+                DOM.waterLevel.style.background = "var(--warning)";
+            } else {
+                DOM.volumeDisplay.innerHTML = `<span style="font-weight:800;">${AppState.waterCurrent.toFixed(1)}</span> L`;
+                DOM.waterLevel.style.background = "linear-gradient(180deg, var(--primary-light), var(--primary))";
             }
-            localStorage.setItem('arrosage_city', document.getElementById('setting-city').value);
-            localStorage.setItem('arrosage_soil', DOM.soilType.value);
-            localStorage.setItem('arrosage_plant', DOM.plantType.value);
-            fetchWeather();
-            showToast("Réglages sauvegardés");
-        });
-
-        // API
-        async function sendPumpCommand(state) {
-            try {
-                await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: state }) });
-                return true;
-            } catch(e) { return false; }
-        }
-
-        async function savePlanningToDatabase() {
-            try {
-                showToast("Synchronisation en cours...");
-                const res = await fetch('/.netlify/functions/update-planning', {
-                    method: 'POST',
-                    body: JSON.stringify({ planning: AppState.schedules })
-                });
-                if (res.ok) showToast("Planning synchronisé !");
-                else showToast("Erreur de sauvegarde");
-            } catch (e) { showToast("Erreur réseau"); }
         }
 
         async function fetchSystemStatus() {
@@ -344,58 +282,54 @@
                     DOM.pumpTxt.textContent = data.pompe_etat ? "Pompe en marche" : "Prêt à arroser";
                 }
                 
-                // --- Mise à jour du planning depuis la DB ---
-                if (data.planning && JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
-                    AppState.schedules = data.planning;
-                    renderSchedules();
+                // Message de badge dynamique
+                if (data.pompe_etat) {
+                    DOM.badge.innerHTML = `● <span style="color:var(--success)">POMPE ACTIVE</span>`;
+                } else {
+                    DOM.badge.innerHTML = `● Connecté`;
+                    DOM.badge.style.color = "var(--success)";
                 }
 
-                DOM.badge.textContent = "● Connecté";
-                DOM.badge.style.color = "var(--success)";
+                if (data.planning) { AppState.schedules = data.planning; renderSchedules(); }
                 DOM.lastSyncTime.textContent = new Date().toLocaleTimeString('fr-FR');
             } catch(e) {
-                DOM.badge.textContent = "● Hors ligne";
+                DOM.badge.innerHTML = `● DÉCONNECTÉ`;
                 DOM.badge.style.color = "var(--danger)";
             }
         }
 
         const SmartEngine = {
-            isActive: false, interval: null,
+            isActive: false,
             async start(mins) {
                 if (AppState.isRaining && DOM.weatherToggle.checked) return showToast("Annulé : Il pleut ☔");
                 this.isActive = true;
                 DOM.banner.style.display = 'block';
                 DOM.btnStop.style.display = 'block';
-                await sendPumpCommand(true);
-                this.interval = setTimeout(() => this.stop(true), mins * 60000);
+                await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: true }) });
+                setTimeout(() => this.stop(true), mins * 60000);
             },
             async stop(done = false) {
-                clearTimeout(this.interval);
                 this.isActive = false;
-                await sendPumpCommand(false);
-                DOM.banner.style.display = 'none';
-                DOM.btnStop.style.display = 'none';
-                showToast(done ? "Terminé !" : "Arrêté !");
+                await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: false }) });
+                DOM.banner.style.display = 'none'; DOM.btnStop.style.display = 'none';
+                showToast(done ? "Arrosage fini !" : "Arrêté !");
             }
         };
 
-        DOM.pumpToggle.addEventListener('change', (e) => sendPumpCommand(e.target.checked));
+        DOM.pumpToggle.addEventListener('change', (e) => fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: e.target.checked }) }));
         DOM.btnBoost5.addEventListener('click', () => SmartEngine.start(5));
         DOM.btnBoost15.addEventListener('click', () => SmartEngine.start(15));
         DOM.btnStop.addEventListener('click', () => SmartEngine.stop());
 
         function verifierPlanning() {
-            if (SmartEngine.isActive) return; 
+            if (SmartEngine.isActive) return;
             const now = new Date();
             const jours = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
-            const jourActuel = jours[now.getDay()];
             const heureActuelle = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-
             AppState.schedules.forEach(plan => {
-                if (plan.days.includes(jourActuel) && plan.time === heureActuelle) {
+                if (plan.days.includes(jours[now.getDay()]) && plan.time === heureActuelle) {
                     if (AppState.lastTriggeredTime !== heureActuelle) {
-                        AppState.lastTriggeredTime = heureActuelle; 
-                        showToast(`⏰ Programme auto démarré !`);
+                        AppState.lastTriggeredTime = heureActuelle;
                         SmartEngine.start(parseInt(plan.duration));
                     }
                 }
@@ -417,44 +351,32 @@
             DOM.planList.innerHTML = '';
             AppState.schedules.forEach((p, i) => {
                 const d = document.createElement('div'); d.className = 'list-item';
-                d.innerHTML = `<div><b>${p.days.join(', ')}</b><br>${p.time} (${p.duration} min)</div>`;
-                const b = document.createElement('button'); b.textContent = '✖';
-                b.onclick = async () => { 
-                    AppState.schedules.splice(i, 1); 
-                    renderSchedules();
-                    await savePlanningToDatabase(); 
-                };
-                d.appendChild(b); DOM.planList.appendChild(d);
+                d.innerHTML = `<div><b>${p.days.join(', ')}</b><br>${p.time} (${p.duration} min)</div><button onclick="delPlan(${i})" style="background:none; border:none; color:var(--danger); font-weight:bold;">✖</button>`;
+                DOM.planList.appendChild(d);
             });
+        }
+
+        async function delPlan(i) {
+            AppState.schedules.splice(i, 1);
+            renderSchedules();
+            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
         }
 
         document.getElementById('btn-save-plan').addEventListener('click', async () => {
             const days = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => cb.value);
-            const timeIn = document.getElementById('time-in').value;
-            const durIn = document.getElementById('dur-in').value;
-
-            if (!timeIn || !durIn || days.length === 0) {
-                showToast("Veuillez remplir tous les champs.");
-                return;
-            }
-
-            AppState.schedules.push({ time: timeIn, duration: durIn, days });
+            const time = document.getElementById('time-in').value;
+            const dur = document.getElementById('dur-in').value;
+            if (!time || !dur || days.length === 0) return showToast("Champs vides !");
+            AppState.schedules.push({ time, duration: dur, days });
             renderSchedules();
-            await savePlanningToDatabase();
+            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
+            showToast("Planning enregistré !");
         });
 
         window.onload = () => {
-            DOM.inputTankMax.value = AppState.waterMax;
-            DOM.displayMaxTank.textContent = AppState.waterMax;
-            document.getElementById('setting-city').value = localStorage.getItem('arrosage_city') || 'Molsheim';
-            DOM.soilType.value = localStorage.getItem('arrosage_soil') || 'limoneux';
-            DOM.plantType.value = localStorage.getItem('arrosage_plant') || 'gazon';
-            
-            fetchWeather(); 
-            fetchSystemStatus();
-            
+            fetchWeather(); fetchSystemStatus();
             setInterval(fetchSystemStatus, 4000);
-            setInterval(verifierPlanning, 30000); 
+            setInterval(verifierPlanning, 30000);
         };
     </script>
 </body>
