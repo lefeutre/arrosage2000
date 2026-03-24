@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Arrosage 2000 Pro</title>
     <style>
-        /* --- MOTEUR DE THÈMES HYPER-PERSONNALISÉ --- */
+        /* --- MOTEUR DE THÈMES --- */
         :root {
-            /* Cyber Night (Défaut) */
             --bg: #080c16; --surf: #151e32; --surf-alt: rgba(255, 255, 255, 0.05);
             --text: #f8fafc; --text-dim: #94a3b8; --prim: #0ea5e9; --prim-l: #38bdf8;
             --font: 'system-ui', sans-serif; --rad: 20px;
@@ -20,29 +19,23 @@
             --text: #166534; --text-dim: #15803d; --prim: #22c55e; --prim-l: #4ade80;
             --font: 'Trebuchet MS', sans-serif; --rad: 30px;
             --tank-border: 4px solid #bbf7d0; --tank-rad: 30px;
+            --water-bg: linear-gradient(180deg, #4ade80, #22c55e);
         }
 
         body.theme-noah {
-            /* Ambiance Taverne / Bière */
             --bg: #1e140a; --surf: #2d1d11; --surf-alt: #3d2817;
             --text: #fef3c7; --text-dim: #d97706; --prim: #f59e0b; --prim-l: #fbbf24;
             --font: 'Georgia', serif; --rad: 10px;
-            /* Design Chope de bière */
-            --tank-border: 6px solid rgba(255, 255, 255, 0.4); 
-            --tank-rad: 5px 5px 20px 20px;
-            --water-bg: linear-gradient(to bottom, #fbbf24, #b45309);
-            --foam: 10px solid #ffffff; /* Mousse ! */
+            --tank-border: 6px solid rgba(255, 255, 255, 0.4); --tank-rad: 5px 5px 20px 20px;
+            --water-bg: linear-gradient(to bottom, #fbbf24, #b45309); --foam: 10px solid #ffffff;
         }
 
         body.theme-tom {
-            /* Ambiance Trail / Strava */
             --bg: #111827; --surf: #1f2937; --surf-alt: #374151;
-            --text: #f8fafc; --text-dim: #9ca3af; --prim: #fc4c02; /* Orange sport */ --prim-l: #fdba74;
+            --text: #f8fafc; --text-dim: #9ca3af; --prim: #fc4c02; --prim-l: #fdba74;
             --font: 'Impact', 'Arial Black', sans-serif; --rad: 8px;
-            /* Design Flasque Souple */
-            --tank-border: 3px solid #4b5563; 
-            --tank-rad: 25px 25px 15px 15px;
-            --water-bg: linear-gradient(to bottom, #06b6d4, #0369a1); /* Eau isotonique */
+            --tank-border: 3px solid #4b5563; --tank-rad: 25px 25px 15px 15px;
+            --water-bg: linear-gradient(to bottom, #06b6d4, #0369a1);
         }
 
         /* --- STYLES GLOBAUX --- */
@@ -62,6 +55,20 @@
 
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+
+        /* Widget Météo Avancé */
+        .weather-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
+        .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+        .weather-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surf-alt); padding: 12px; border-radius: 15px; text-align: center; font-family: sans-serif; }
+        .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; }
+        .w-det-val { display: block; font-size: 1.1rem; color: var(--text); margin-top: 5px; }
+
+        /* Autocomplétion Ville */
+        .search-container { position: relative; }
+        #city-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--surf); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-top: 5px; z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
+        .city-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; color: var(--text); font-family: sans-serif; font-size: 0.9rem; }
+        .city-result-item:hover { background: var(--surf-alt); color: var(--prim-l); }
 
         /* Cuve Dynamique */
         .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: all 0.3s; }
@@ -110,17 +117,34 @@
         <div id="active-banner">ACTION EN COURS</div>
 
         <main id="view-home" class="view active">
-            <div class="card">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <span id="w-icon" style="font-size: 2.8rem;">🌤️</span>
-                    <div style="font-family: sans-serif;">
-                        <b id="w-city" style="font-size: 1.2rem;">--</b><br>
-                        <span id="w-desc" style="color: var(--text-dim);">Recherche météo...</span>
+            <div class="card" style="padding: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <div style="color: var(--text-dim); font-weight: bold; font-size: 0.9rem; font-family: sans-serif;" id="w-city-display">📍 Recherche...</div>
+                        <div class="weather-temp" id="w-temp">--°</div>
+                        <div style="font-weight: bold; font-size: 1rem; margin-top: 5px; font-family: sans-serif;" id="w-desc">Mise à jour...</div>
+                    </div>
+                    <div class="weather-icon" id="w-icon">⛅</div>
+                </div>
+                
+                <div class="weather-details">
+                    <div>
+                        <span class="w-det-item">💧 Humidité</span>
+                        <span class="w-det-val" id="w-hum">--%</span>
+                    </div>
+                    <div style="border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                        <span class="w-det-item">💨 Vent</span>
+                        <span class="w-det-val" id="w-wind">-- km/h</span>
+                    </div>
+                    <div>
+                        <span class="w-det-item">🌡️ Min/Max</span>
+                        <span class="w-det-val" id="w-minmax">--° / --°</span>
                     </div>
                 </div>
-                <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
+
+                <hr style="margin: 20px 0 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div style="display: flex; justify-content: space-between; align-items: center; font-family: sans-serif;">
-                    <small id="rain-label">Bloquer si pluie</small>
+                    <small id="rain-label" style="font-weight: bold; font-size: 0.9rem;">Désactiver si pluie</small>
                     <label class="switch"><input type="checkbox" id="rain-toggle" checked><span class="slider"></span></label>
                 </div>
             </div>
@@ -129,12 +153,12 @@
                 <h3 id="tank-label" style="text-align: center;">Réserve de Liquide</h3>
                 <div class="tank-mini"><div id="water-level" class="water-mini"></div></div>
                 <div class="tank-val" id="vol-txt">-- L</div>
-                <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: sans-serif;">Max : <span id="max-txt">50</span>L</div>
+                <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: sans-serif; margin-top: 5px;">Max : <span id="max-txt">50</span>L</div>
             </div>
 
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: sans-serif;">
-                    <b id="pump-label">Contrôle Manuel</b>
+                    <b id="pump-label" style="font-size: 1.1rem;">Contrôle Manuel</b>
                     <label class="switch"><input type="checkbox" id="pump-toggle"><span class="slider"></span></label>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -172,14 +196,14 @@
                 <div id="logs-container" style="max-height: 60vh; overflow-y: auto;">
                     <div style="text-align:center; padding: 20px; color: var(--text-dim); font-style: italic;">Aucun événement récent.</div>
                 </div>
-                <button onclick="clearLogs()" style="width: 100%; padding: 10px; margin-top: 15px; background: none; border: 1px solid var(--text-dim); color: var(--text-dim); border-radius: 8px; cursor: pointer;">Effacer l'historique</button>
+                <button onclick="clearLogs()" style="width: 100%; padding: 12px; margin-top: 15px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); border-radius: 12px; cursor: pointer; font-weight: bold;">Effacer l'historique</button>
             </div>
         </main>
 
         <main id="view-settings" class="view">
             <div class="card">
                 <h3>Styles & Ambiances</h3>
-                <select id="theme-select" class="input-box">
+                <select id="theme-select" class="input-box" onchange="previewTheme()">
                     <option value="theme-cyber">🔵 Cyber Night (Standard)</option>
                     <option value="theme-nature">🌿 Nature Soft (Zen)</option>
                     <option value="theme-noah">🍺 Thème Noah (Taverne)</option>
@@ -187,8 +211,14 @@
                 </select>
             </div>
             <div class="card">
-                <h3>Paramètres</h3>
-                <input type="text" id="city-in" class="input-box" placeholder="Ville pour Météo">
+                <h3>🌍 Ville & Météo</h3>
+                <div class="search-container">
+                    <input type="text" id="city-search" class="input-box" placeholder="Rechercher une ville..." autocomplete="off">
+                    <div id="city-results"></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>⚙️ Paramètres Cuve</h3>
                 <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)">
             </div>
             <button class="btn" onclick="saveSettings()">Appliquer les changements</button>
@@ -205,13 +235,13 @@
     </div>
 
     <script>
-        // --- ETAT GLOBAL OPTIMISÉ ---
+        // --- ETAT GLOBAL ---
         const AppState = {
             volume: 0, 
             maxVolume: parseInt(localStorage.getItem('max_v')) || 50,
             isRaining: false, 
             schedules: [], 
-            city: localStorage.getItem('city') || 'Molsheim',
+            location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
             logs: JSON.parse(localStorage.getItem('sys_logs')) || [],
             lastTrigger: ""
         };
@@ -223,7 +253,7 @@
             const dateStr = String(now.getDate()).padStart(2, '0') + "/" + String(now.getMonth() + 1).padStart(2, '0');
             
             AppState.logs.unshift({ msg: message, time: `${dateStr} - ${timeStr}` });
-            if (AppState.logs.length > 40) AppState.logs.pop(); // Garde les 40 derniers
+            if (AppState.logs.length > 40) AppState.logs.pop();
             
             localStorage.setItem('sys_logs', JSON.stringify(AppState.logs));
             renderLogs();
@@ -240,7 +270,6 @@
                 cont.innerHTML += `<div class="list-item"><span>${log.msg}</span><span class="log-time">${log.time}</span></div>`;
             });
         }
-
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); showToast("Journal effacé"); }
 
         // --- MOTEUR INTELLIGENT ---
@@ -280,7 +309,6 @@
                 const res = await fetch('/.netlify/functions/get-status');
                 const data = await res.json();
                 
-                // Volume
                 AppState.volume = parseFloat(data.volume_eau);
                 const pct = (AppState.volume / AppState.maxVolume) * 100;
                 document.getElementById('water-level').style.height = Math.min(pct, 100) + "%";
@@ -289,18 +317,16 @@
                 if (AppState.volume <= 0.2) {
                     txt.innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
                     if (data.pompe_etat) {
-                        await sendPump(false); // Sécurité matérielle absolue
+                        await sendPump(false);
                         addLog("⚠️ Coupure sécurité (Cuve 0L)");
                     }
                 } else {
                     txt.textContent = AppState.volume.toFixed(1) + " L";
                 }
 
-                // Pompe
                 document.getElementById('pump-toggle').checked = data.pompe_etat;
                 updateThemeLabels(document.body.className, data.pompe_etat);
 
-                // Planning
                 if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
                     AppState.schedules = data.planning || [];
                     renderPlans();
@@ -315,13 +341,9 @@
             await fetch('/.netlify/functions/update-pump', { method: 'POST', body: JSON.stringify({ pompe_etat: state }) });
         }
 
-        // Toggle Manuel
         document.getElementById('pump-toggle').onchange = (e) => {
             if (e.target.checked) {
-                if (AppState.volume <= 0.2) {
-                    e.target.checked = false;
-                    return showToast("Réservoir vide !");
-                }
+                if (AppState.volume <= 0.2) { e.target.checked = false; return showToast("Réservoir vide !"); }
                 addLog("▶️ Allumage manuel");
             } else {
                 addLog("🛑 Extinction manuelle");
@@ -329,20 +351,80 @@
             sendPump(e.target.checked);
         };
 
-        // --- MÉTÉO ---
+        // --- MÉTÉO AVANCÉE (NOUVEAU) ---
+        // Dictionnaire des codes météo WMO pour des textes parfaits
+        const weatherCodes = {
+            0: { i: "☀️", t: "Ensoleillé" }, 1: { i: "🌤️", t: "Peu nuageux" }, 2: { i: "⛅", t: "Nuageux" }, 3: { i: "☁️", t: "Couvert" },
+            45: { i: "🌫️", t: "Brouillard" }, 48: { i: "🌫️", t: "Brouillard givrant" },
+            51: { i: "🌧️", t: "Bruine légère" }, 53: { i: "🌧️", t: "Bruine modérée" }, 55: { i: "🌧️", t: "Bruine dense" },
+            61: { i: "☔", t: "Pluie faible" }, 63: { i: "☔", t: "Pluie modérée" }, 65: { i: "☔", t: "Pluie forte" },
+            71: { i: "❄️", t: "Neige faible" }, 73: { i: "❄️", t: "Neige modérée" }, 75: { i: "❄️", t: "Neige forte" },
+            95: { i: "🌩️", t: "Orage" }, 96: { i: "⛈️", t: "Orage violent" }
+        };
+
         async function fetchWeather() {
             try {
-                const g = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${AppState.city}&count=1`)).json();
-                if(!g.results) return;
-                const { latitude, longitude, name } = g.results[0];
-                const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`)).json();
+                const { lat, lon, name } = AppState.location;
+                // Appel API complet (Température, Humidité, Vent, Min/Max)
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+                const res = await fetch(url);
+                const data = await res.json();
                 
-                AppState.isRaining = w.current_weather.weathercode >= 51;
-                document.getElementById('w-city').textContent = name;
-                document.getElementById('w-desc').textContent = `${w.current_weather.temperature}°C - ${AppState.isRaining ? 'Pluie ☔' : 'Sec ☀️'}`;
-                document.getElementById('w-icon').textContent = AppState.isRaining ? '🌧️' : '☀️';
-            } catch(e) {}
+                const cur = data.current;
+                const day = data.daily;
+                const weather = weatherCodes[cur.weather_code] || { i: "☁️", t: "Inconnu" };
+                
+                // Détection pluie globale (codes >= 51)
+                AppState.isRaining = cur.weather_code >= 51;
+
+                // Mise à jour de l'UI Météo
+                document.getElementById('w-city-display').textContent = `📍 ${name}`;
+                document.getElementById('w-temp').textContent = `${Math.round(cur.temperature_2m)}°`;
+                document.getElementById('w-desc').textContent = weather.t;
+                document.getElementById('w-icon').textContent = weather.i;
+                
+                document.getElementById('w-hum').textContent = `${cur.relative_humidity_2m}%`;
+                document.getElementById('w-wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
+                document.getElementById('w-minmax').textContent = `${Math.round(day.temperature_2m_min[0])}° / ${Math.round(day.temperature_2m_max[0])}°`;
+
+            } catch(e) { console.error("Erreur météo"); }
         }
+
+        // --- AUTOCOMPLÉTION RECHERCHE VILLE (NOUVEAU) ---
+        const searchInput = document.getElementById('city-search');
+        const resultsBox = document.getElementById('city-results');
+        let searchTimeout;
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const val = e.target.value;
+            if(val.length < 3) { resultsBox.style.display = 'none'; return; }
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${val}&count=5&language=fr`);
+                    const data = await res.json();
+                    
+                    if(data.results && data.results.length > 0) {
+                        resultsBox.innerHTML = '';
+                        data.results.forEach(city => {
+                            const div = document.createElement('div');
+                            div.className = 'city-result-item';
+                            // Affiche "Ville, Pays"
+                            div.textContent = `${city.name} (${city.country})`;
+                            div.onclick = () => {
+                                AppState.location = { name: city.name, lat: city.latitude, lon: city.longitude };
+                                searchInput.value = city.name;
+                                resultsBox.style.display = 'none';
+                                showToast("Ville sélectionnée !");
+                            };
+                            resultsBox.appendChild(div);
+                        });
+                        resultsBox.style.display = 'block';
+                    }
+                } catch(e) {}
+            }, 500); // Cherche 500ms après la frappe
+        });
 
         // --- PLANNING UI ---
         async function saveNewPlan() {
@@ -362,7 +444,7 @@
         function renderPlans() {
             const cont = document.getElementById('plan-list'); cont.innerHTML = "";
             AppState.schedules.forEach((p, i) => {
-                cont.innerHTML += `<div class="list-item"><div><b>${p.time}</b> (${p.duration}m)<br><small style="color:var(--text-dim)">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:#ef4444; font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer;">✖</button></div>`;
+                cont.innerHTML += `<div class="list-item"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:#ef4444; font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer;">✖</button></div>`;
             });
         }
 
@@ -373,7 +455,12 @@
             addLog("🗑️ Programme supprimé");
         }
 
-        // --- THEMES & LABELS ---
+        // --- THEMES & REGLAGES ---
+        function previewTheme() {
+            const t = document.getElementById('theme-select').value;
+            document.body.className = t;
+        }
+
         function updateThemeLabels(theme, isRunning) {
             const title = document.getElementById('main-title');
             const tank = document.getElementById('tank-label');
@@ -396,11 +483,12 @@
         }
 
         function saveSettings() {
-            const c = document.getElementById('city-in').value;
             const m = document.getElementById('max-in').value;
             const t = document.getElementById('theme-select').value;
             
-            if(c) { AppState.city = c; localStorage.setItem('city', c); }
+            // Sauvegarde de la ville dans le bon format (lat/lon)
+            localStorage.setItem('arrosage_loc', JSON.stringify(AppState.location));
+            
             if(m) { AppState.maxVolume = m; localStorage.setItem('max_v', m); document.getElementById('max-txt').textContent = m; }
             
             document.body.className = t;
@@ -411,7 +499,7 @@
             showToast("Préférences enregistrées !");
         }
 
-        // --- NAVIGATION & UTILITAIRES ---
+        // --- NAVIGATION ---
         function showView(id, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -424,22 +512,26 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); 
         }
 
+        // Cacher l'autocomplétion si clic ailleurs
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.search-container')) document.getElementById('city-results').style.display = 'none';
+        });
+
         window.onload = () => {
-            // Initialisation
             const savedTheme = localStorage.getItem('arrosage_theme') || 'theme-cyber';
             document.body.className = savedTheme;
             document.getElementById('theme-select').value = savedTheme;
+            
             document.getElementById('max-in').value = AppState.maxVolume;
             document.getElementById('max-txt').textContent = AppState.maxVolume;
-            document.getElementById('city-in').value = AppState.city;
+            document.getElementById('city-search').value = AppState.location.name;
 
             renderLogs();
             fetchWeather(); 
             fetchAll();
             
-            // Boucles
-            setInterval(fetchAll, 4000); // 4s pour les données critiques
-            setInterval(fetchWeather, 600000); // 10 minutes pour la météo
+            setInterval(fetchAll, 4000); 
+            setInterval(fetchWeather, 600000); 
             
             setInterval(() => {
                 const now = new Date();
