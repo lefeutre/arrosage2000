@@ -40,29 +40,39 @@
 
         /* --- STYLES GLOBAUX --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text); padding-bottom: 110px; display: flex; justify-content: center; transition: all 0.3s ease; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 110px; display: flex; justify-content: center; transition: background-color 0.4s ease, color 0.4s ease; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
         
         header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .header-title { font-size: 1.4rem; font-weight: 800; color: var(--prim-l); }
+        .header-title { font-size: 1.4rem; font-weight: 800; color: var(--prim-l); transition: color 0.3s; }
         
-        .view { display: none; padding: 15px; animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        /* Animations de vue et de cartes en cascade */
+        .view { display: none; padding: 15px; }
         .view.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--surf); border-radius: var(--rad); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 20px rgba(0,0,0,0.15); animation: fadeUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+        
+        /* Décalage des animations pour un effet d'apparition en cascade */
+        .view.active .card:nth-child(1) { animation-delay: 0.05s; }
+        .view.active .card:nth-child(2) { animation-delay: 0.10s; }
+        .view.active .card:nth-child(3) { animation-delay: 0.15s; }
+        .view.active .card:nth-child(4) { animation-delay: 0.20s; }
 
-        .card { background: var(--surf); border-radius: var(--rad); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
         h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; color: var(--text-dim); font-family: sans-serif; }
 
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-        /* Widget Météo Avancé */
-        .weather-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        /* Widget Météo & Animations */
         .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
-        .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-        .weather-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surf-alt); padding: 12px; border-radius: 15px; text-align: center; font-family: sans-serif; }
-        .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; }
-        .w-det-val { display: block; font-size: 1.1rem; color: var(--text); margin-top: 5px; }
+        .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        
+        .weather-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surf-alt); padding: 12px; border-radius: 15px; text-align: center; font-family: sans-serif; margin-top: 10px; }
+        .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; display: block; }
+        .w-det-val { font-size: 1.1rem; color: var(--text); margin-top: 4px; display: block; }
 
         /* Autocomplétion Ville */
         .search-container { position: relative; }
@@ -71,39 +81,47 @@
         .city-result-item:hover { background: var(--surf-alt); color: var(--prim-l); }
 
         /* Cuve Dynamique */
-        .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: all 0.3s; }
-        .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--water-bg); border-top: var(--foam); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tank-val { font-size: 2.5rem; font-weight: 900; text-align: center; margin-top: 10px; }
+        .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: border 0.3s, border-radius 0.3s; }
+        .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--water-bg); border-top: var(--foam); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; }
+        .tank-val { font-size: 2.5rem; font-weight: 900; text-align: center; margin-top: 10px; transition: color 0.3s; }
 
         /* UI Elements */
-        .input-box { width: 100%; padding: 14px; border-radius: 12px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; outline: none; }
+        .input-box { width: 100%; padding: 14px; border-radius: 12px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; outline: none; transition: background 0.3s, border 0.3s; }
+        .input-box:focus { border-color: var(--prim); background: var(--surf); }
         
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
         .day-check { display: none; }
-        .day-label { height: 44px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surf-alt); color: var(--text-dim); font-weight: bold; font-size: 0.85rem; border: 1px solid transparent; cursor: pointer; transition: 0.2s; font-family: sans-serif;}
-        .day-check:checked + .day-label { background: var(--prim); color: var(--bg); border-color: var(--prim-l); }
+        .day-label { height: 44px; display: flex; justify-content: center; align-items: center; border-radius: 10px; background: var(--surf-alt); color: var(--text-dim); font-weight: bold; font-size: 0.85rem; border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease; font-family: sans-serif;}
+        .day-check:checked + .day-label { background: var(--prim); color: var(--bg); border-color: var(--prim-l); transform: scale(0.95); }
 
         .switch { position: relative; width: 54px; height: 30px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #475569; border-radius: 30px; transition: .3s; }
-        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .3s; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #475569; border-radius: 30px; transition: .4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .4s cubic-bezier(0.4, 0, 0.2, 1); }
         input:checked + .slider { background: var(--prim); }
         input:checked + .slider:before { transform: translateX(24px); }
 
-        .btn { width: 100%; padding: 16px; background: var(--prim); color: var(--bg); border: none; border-radius: var(--rad); font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-boost { flex: 1; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-boost:active { background: var(--prim); color: var(--bg); }
+        .btn { width: 100%; padding: 16px; background: var(--prim); color: var(--bg); border: none; border-radius: var(--rad); font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-boost { flex: 1; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        .btn-boost:active { background: var(--prim); color: var(--bg); transform: scale(0.95); }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: var(--surf); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); backdrop-filter: blur(15px); }
-        .nav-item { border: none; background: none; color: var(--text-dim); font-size: 0.7rem; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; font-family: sans-serif; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: var(--surf); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); backdrop-filter: blur(15px); transition: background 0.3s; z-index: 1000; }
+        .nav-item { border: none; background: none; color: var(--text-dim); font-size: 0.7rem; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; font-family: sans-serif; transition: color 0.3s; }
         .nav-item.active { color: var(--prim); }
+        .nav-item .icon { font-size: 1.4rem; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .nav-item.active .icon { transform: translateY(-3px); }
         
         #toast { position: fixed; bottom: 90px; left: 50%; transform: translate(-50%, 20px); background: var(--text); color: var(--bg); padding: 12px 24px; border-radius: 30px; font-weight: bold; opacity: 0; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; z-index: 9999; font-family: sans-serif; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #toast.show { opacity: 1; transform: translate(-50%, 0); }
         
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--surf-alt); border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--surf-alt); border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; transition: background 0.3s; }
         .log-time { color: var(--text-dim); font-size: 0.8rem; }
+
+        /* Carte Astuce */
+        .astuce-box { background: var(--surf-alt); border-left: 4px solid var(--prim); padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
+        .astuce-box p { font-family: sans-serif; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); margin: 0; }
+        .astuce-box strong { color: var(--text); }
     </style>
 </head>
 <body class="theme-cyber">
@@ -111,14 +129,14 @@
     <div class="app-container">
         <header>
             <div class="header-title" id="main-title">Arrosage 2000</div>
-            <div id="badge" style="font-size: 0.85rem; font-weight: bold; font-family: sans-serif;">● Connexion...</div>
+            <div id="badge" style="font-size: 0.85rem; font-weight: bold; font-family: sans-serif; transition: color 0.3s;">● Connexion...</div>
         </header>
 
         <div id="active-banner">ACTION EN COURS</div>
 
         <main id="view-home" class="view active">
             <div class="card" style="padding: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="color: var(--text-dim); font-weight: bold; font-size: 0.9rem; font-family: sans-serif;" id="w-city-display">📍 Recherche...</div>
                         <div class="weather-temp" id="w-temp">--°</div>
@@ -167,6 +185,13 @@
                     <button class="btn-boost" id="stop-btn" onclick="SmartEngine.stop()" style="color: #ef4444; display: none;">🛑 STOP</button>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="astuce-box">
+                    <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">💡</span>
+                    <p><strong>Astuce Éco :</strong> Privilégiez des arrosages abondants 1 à 2 fois par semaine plutôt qu'un peu tous les jours. L'arrosage à l'aube ou au crépuscule limite l'évaporation.</p>
+                </div>
+            </div>
         </main>
 
         <main id="view-plan" class="view">
@@ -193,10 +218,10 @@
         <main id="view-stats" class="view">
             <div class="card">
                 <h3>Historique d'activité</h3>
-                <div id="logs-container" style="max-height: 60vh; overflow-y: auto;">
+                <div id="logs-container" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
                     <div style="text-align:center; padding: 20px; color: var(--text-dim); font-style: italic;">Aucun événement récent.</div>
                 </div>
-                <button onclick="clearLogs()" style="width: 100%; padding: 12px; margin-top: 15px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); border-radius: 12px; cursor: pointer; font-weight: bold;">Effacer l'historique</button>
+                <button onclick="clearLogs()" style="width: 100%; padding: 12px; margin-top: 15px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); border-radius: 12px; cursor: pointer; font-weight: bold; transition: background 0.2s;">Effacer l'historique</button>
             </div>
         </main>
 
@@ -225,10 +250,10 @@
         </main>
 
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="showView('view-home', this)"><span style="font-size: 1.4rem;">🏠</span>Accueil</button>
-            <button class="nav-item" onclick="showView('view-plan', this)"><span style="font-size: 1.4rem;">📅</span>Planning</button>
-            <button class="nav-item" onclick="showView('view-stats', this)"><span style="font-size: 1.4rem;">📋</span>Journal</button>
-            <button class="nav-item" onclick="showView('view-settings', this)"><span style="font-size: 1.4rem;">⚙️</span>Réglages</button>
+            <button class="nav-item active" onclick="showView('view-home', this)"><span class="icon">🏠</span>Accueil</button>
+            <button class="nav-item" onclick="showView('view-plan', this)"><span class="icon">📅</span>Planning</button>
+            <button class="nav-item" onclick="showView('view-stats', this)"><span class="icon">📋</span>Journal</button>
+            <button class="nav-item" onclick="showView('view-settings', this)"><span class="icon">⚙️</span>Réglages</button>
         </nav>
         
         <div id="toast">Message</div>
@@ -315,7 +340,7 @@
                 
                 const txt = document.getElementById('vol-txt');
                 if (AppState.volume <= 0.2) {
-                    txt.innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
+                    txt.innerHTML = "<span style='color:var(--danger)'>VIDE !</span>";
                     if (data.pompe_etat) {
                         await sendPump(false);
                         addLog("⚠️ Coupure sécurité (Cuve 0L)");
@@ -332,9 +357,9 @@
                     renderPlans();
                 }
 
-                document.getElementById('badge').style.color = "#10b981";
+                document.getElementById('badge').style.color = "var(--success)";
                 document.getElementById('badge').textContent = "● Connecté";
-            } catch(e) { document.getElementById('badge').style.color = "#ef4444"; document.getElementById('badge').textContent = "● Erreur Serveur"; }
+            } catch(e) { document.getElementById('badge').style.color = "var(--danger)"; document.getElementById('badge').textContent = "● Erreur Serveur"; }
         }
 
         async function sendPump(state) {
@@ -351,8 +376,7 @@
             sendPump(e.target.checked);
         };
 
-        // --- MÉTÉO AVANCÉE (NOUVEAU) ---
-        // Dictionnaire des codes météo WMO pour des textes parfaits
+        // --- MÉTÉO AVANCÉE ---
         const weatherCodes = {
             0: { i: "☀️", t: "Ensoleillé" }, 1: { i: "🌤️", t: "Peu nuageux" }, 2: { i: "⛅", t: "Nuageux" }, 3: { i: "☁️", t: "Couvert" },
             45: { i: "🌫️", t: "Brouillard" }, 48: { i: "🌫️", t: "Brouillard givrant" },
@@ -365,7 +389,6 @@
         async function fetchWeather() {
             try {
                 const { lat, lon, name } = AppState.location;
-                // Appel API complet (Température, Humidité, Vent, Min/Max)
                 const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
                 const res = await fetch(url);
                 const data = await res.json();
@@ -374,10 +397,8 @@
                 const day = data.daily;
                 const weather = weatherCodes[cur.weather_code] || { i: "☁️", t: "Inconnu" };
                 
-                // Détection pluie globale (codes >= 51)
                 AppState.isRaining = cur.weather_code >= 51;
 
-                // Mise à jour de l'UI Météo
                 document.getElementById('w-city-display').textContent = `📍 ${name}`;
                 document.getElementById('w-temp').textContent = `${Math.round(cur.temperature_2m)}°`;
                 document.getElementById('w-desc').textContent = weather.t;
@@ -387,10 +408,10 @@
                 document.getElementById('w-wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
                 document.getElementById('w-minmax').textContent = `${Math.round(day.temperature_2m_min[0])}° / ${Math.round(day.temperature_2m_max[0])}°`;
 
-            } catch(e) { console.error("Erreur météo"); }
+            } catch(e) { console.error("Erreur API Météo"); }
         }
 
-        // --- AUTOCOMPLÉTION RECHERCHE VILLE (NOUVEAU) ---
+        // --- AUTOCOMPLÉTION VILLE ---
         const searchInput = document.getElementById('city-search');
         const resultsBox = document.getElementById('city-results');
         let searchTimeout;
@@ -410,7 +431,6 @@
                         data.results.forEach(city => {
                             const div = document.createElement('div');
                             div.className = 'city-result-item';
-                            // Affiche "Ville, Pays"
                             div.textContent = `${city.name} (${city.country})`;
                             div.onclick = () => {
                                 AppState.location = { name: city.name, lat: city.latitude, lon: city.longitude };
@@ -423,7 +443,7 @@
                         resultsBox.style.display = 'block';
                     }
                 } catch(e) {}
-            }, 500); // Cherche 500ms après la frappe
+            }, 500);
         });
 
         // --- PLANNING UI ---
@@ -432,7 +452,7 @@
             const duration = document.getElementById('dur-in').value;
             const days = Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value);
             
-            if(!time || !duration || days.length === 0) return showToast("Heure, durée ou jours manquants !");
+            if(!time || !duration || days.length === 0) return showToast("Veuillez remplir tous les champs !");
             
             AppState.schedules.push({ time, duration, days });
             await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
@@ -444,7 +464,7 @@
         function renderPlans() {
             const cont = document.getElementById('plan-list'); cont.innerHTML = "";
             AppState.schedules.forEach((p, i) => {
-                cont.innerHTML += `<div class="list-item"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:#ef4444; font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer;">✖</button></div>`;
+                cont.innerHTML += `<div class="list-item" style="animation: slideUp 0.3s ease forwards; animation-delay: ${i * 0.1}s;"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:var(--danger); font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer; transition: transform 0.2s;">✖</button></div>`;
             });
         }
 
@@ -486,9 +506,7 @@
             const m = document.getElementById('max-in').value;
             const t = document.getElementById('theme-select').value;
             
-            // Sauvegarde de la ville dans le bon format (lat/lon)
             localStorage.setItem('arrosage_loc', JSON.stringify(AppState.location));
-            
             if(m) { AppState.maxVolume = m; localStorage.setItem('max_v', m); document.getElementById('max-txt').textContent = m; }
             
             document.body.className = t;
@@ -512,7 +530,6 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); 
         }
 
-        // Cacher l'autocomplétion si clic ailleurs
         document.addEventListener('click', (e) => {
             if(!e.target.closest('.search-container')) document.getElementById('city-results').style.display = 'none';
         });
