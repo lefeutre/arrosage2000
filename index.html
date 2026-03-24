@@ -46,13 +46,11 @@
         header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .header-title { font-size: 1.4rem; font-weight: 800; color: var(--prim-l); transition: color 0.3s; }
         
-        /* Animations de vue et de cartes en cascade */
         .view { display: none; padding: 15px; }
         .view.active { display: block; }
         
         .card { background: var(--surf); border-radius: var(--rad); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 20px rgba(0,0,0,0.15); animation: fadeUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
         
-        /* Décalage des animations pour un effet d'apparition en cascade */
         .view.active .card:nth-child(1) { animation-delay: 0.05s; }
         .view.active .card:nth-child(2) { animation-delay: 0.10s; }
         .view.active .card:nth-child(3) { animation-delay: 0.15s; }
@@ -65,7 +63,7 @@
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-        /* Widget Météo & Animations */
+        /* Widget Météo */
         .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
         .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -73,6 +71,9 @@
         .weather-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--surf-alt); padding: 12px; border-radius: 15px; text-align: center; font-family: sans-serif; margin-top: 10px; }
         .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; display: block; }
         .w-det-val { font-size: 1.1rem; color: var(--text); margin-top: 4px; display: block; }
+
+        /* Conseil d'Arrosage */
+        .weather-advice { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 10px; font-size: 0.85rem; color: var(--text); border-left: 4px solid var(--prim); font-family: sans-serif; line-height: 1.4; transition: border-color 0.3s; }
 
         /* Autocomplétion Ville */
         .search-container { position: relative; }
@@ -118,7 +119,6 @@
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--surf-alt); border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; transition: background 0.3s; }
         .log-time { color: var(--text-dim); font-size: 0.8rem; }
 
-        /* Carte Astuce */
         .astuce-box { background: var(--surf-alt); border-left: 4px solid var(--prim); padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
         .astuce-box p { font-family: sans-serif; font-size: 0.85rem; line-height: 1.4; color: var(--text-dim); margin: 0; }
         .astuce-box strong { color: var(--text); }
@@ -160,6 +160,11 @@
                     </div>
                 </div>
 
+                <div class="weather-advice" id="w-advice-box">
+                    <strong style="color: var(--text-dim);">💡 Analyse Météo :</strong><br>
+                    <span id="w-advice-text">Chargement des données...</span>
+                </div>
+
                 <hr style="margin: 20px 0 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div style="display: flex; justify-content: space-between; align-items: center; font-family: sans-serif;">
                     <small id="rain-label" style="font-weight: bold; font-size: 0.9rem;">Désactiver si pluie</small>
@@ -188,8 +193,8 @@
 
             <div class="card">
                 <div class="astuce-box">
-                    <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">💡</span>
-                    <p><strong>Astuce Éco :</strong> Privilégiez des arrosages abondants 1 à 2 fois par semaine plutôt qu'un peu tous les jours. L'arrosage à l'aube ou au crépuscule limite l'évaporation.</p>
+                    <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌿</span>
+                    <p><strong>Rappel Pratique :</strong> Privilégiez des arrosages abondants 1 à 2 fois par semaine plutôt qu'un peu tous les jours. L'arrosage à l'aube limite l'évaporation.</p>
                 </div>
             </div>
         </main>
@@ -407,6 +412,30 @@
                 document.getElementById('w-hum').textContent = `${cur.relative_humidity_2m}%`;
                 document.getElementById('w-wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
                 document.getElementById('w-minmax').textContent = `${Math.round(day.temperature_2m_min[0])}° / ${Math.round(day.temperature_2m_max[0])}°`;
+
+                // --- RECOMMANDATION DYNAMIQUE D'ARROSAGE ---
+                let adviceText = "";
+                let adviceColor = "";
+                
+                if (AppState.isRaining) {
+                    adviceText = "Arrosage inutile, précipitations en cours ou prévues.";
+                    adviceColor = "var(--prim)"; // Bleu
+                } else if (cur.temperature_2m >= 25) {
+                    adviceText = "Temps très chaud et sec. Un arrosage abondant est recommandé (de préférence le soir).";
+                    adviceColor = "var(--warning)"; // Orange
+                } else if (cur.temperature_2m >= 15) {
+                    adviceText = "Temps sec et clément. Un arrosage régulier est conseillé pour maintenir l'humidité.";
+                    adviceColor = "var(--success)"; // Vert
+                } else if (cur.temperature_2m <= 5) {
+                    adviceText = "Températures proches du gel. Ne surtout pas arroser pour éviter d'endommager les plantes.";
+                    adviceColor = "var(--prim-l)"; // Bleu clair
+                } else {
+                    adviceText = "Temps frais. L'arrosage n'est généralement pas nécessaire sauf en cas de sol très sec.";
+                    adviceColor = "var(--text-dim)"; // Gris
+                }
+
+                document.getElementById('w-advice-text').textContent = adviceText;
+                document.getElementById('w-advice-box').style.borderLeftColor = adviceColor;
 
             } catch(e) { console.error("Erreur API Météo"); }
         }
