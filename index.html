@@ -251,6 +251,12 @@
                 <h3>⚙️ Paramètres Cuve</h3>
                 <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)">
             </div>
+            
+            <div class="card">
+                <h3>🗑️ Entretien</h3>
+                <button class="btn" style="background: #ef4444;" onclick="vidangerCuve()">Vidanger la cuve (Remise à 0)</button>
+            </div>
+
             <button class="btn" onclick="saveSettings()">Appliquer les changements</button>
         </main>
 
@@ -268,6 +274,7 @@
         // --- ETAT GLOBAL ---
         const AppState = {
             volume: 0, 
+            // Modification : Volume par défaut passé à 5 Litres
             maxVolume: parseInt(localStorage.getItem('max_v')) || 5,
             isRaining: false, 
             schedules: [], 
@@ -345,7 +352,7 @@
                 
                 const txt = document.getElementById('vol-txt');
                 if (AppState.volume <= 0.2) {
-                    txt.innerHTML = "<span style='color:var(--danger)'>VIDE !</span>";
+                    txt.innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
                     if (data.pompe_etat) {
                         await sendPump(false);
                         addLog("⚠️ Coupure sécurité (Cuve 0L)");
@@ -505,6 +512,32 @@
         }
 
         // --- THEMES & REGLAGES ---
+        async function vidangerCuve() {
+            if(!confirm("Êtes-vous sûr de vouloir remettre le volume à 0 Litre ?")) return;
+
+            try {
+                // Envoi de l'ordre 0L à la base de données
+                await fetch('/.netlify/functions/update-volume', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ volume_eau: 0.0 }) 
+                });
+                
+                // Mise à jour immédiate de l'interface visuelle
+                AppState.volume = 0;
+                document.getElementById('vol-txt').innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
+                document.getElementById('water-level').style.height = "0%";
+                
+                // Si la pompe tournait, on force l'arrêt
+                document.getElementById('pump-toggle').checked = false;
+                await sendPump(false);
+                
+                showToast("Cuve vidangée !");
+                addLog("🗑️ Vidange manuelle (Remise à 0L)");
+            } catch (e) {
+                showToast("Erreur lors de la vidange");
+            }
+        }
+
         function previewTheme() {
             const t = document.getElementById('theme-select').value;
             document.body.className = t;
