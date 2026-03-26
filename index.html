@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Arrosage 2000 Pro</title>
     <style>
-        /* --- MOTEUR DE THÈMES --- */
         :root {
             --bg: #080c16; --surf: #151e32; --surf-alt: rgba(255, 255, 255, 0.05);
             --text: #f8fafc; --text-dim: #94a3b8; --prim: #0ea5e9; --prim-l: #38bdf8;
@@ -38,7 +37,6 @@
             --water-bg: linear-gradient(to bottom, #06b6d4, #0369a1);
         }
 
-        /* --- STYLES GLOBAUX --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); padding-bottom: 110px; display: flex; justify-content: center; transition: background-color 0.4s ease, color 0.4s ease; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
@@ -63,7 +61,6 @@
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-        /* Widget Météo */
         .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
         .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -72,21 +69,17 @@
         .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; display: block; }
         .w-det-val { font-size: 1.1rem; color: var(--text); margin-top: 4px; display: block; }
 
-        /* Conseil d'Arrosage */
         .weather-advice { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 10px; font-size: 0.85rem; color: var(--text); border-left: 4px solid var(--prim); font-family: sans-serif; line-height: 1.4; transition: border-color 0.3s; }
 
-        /* Autocomplétion Ville */
         .search-container { position: relative; }
         #city-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--surf); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-top: 5px; z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
         .city-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; color: var(--text); font-family: sans-serif; font-size: 0.9rem; }
         .city-result-item:hover { background: var(--surf-alt); color: var(--prim-l); }
 
-        /* Cuve Dynamique */
         .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: border 0.3s, border-radius 0.3s; }
         .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--water-bg); border-top: var(--foam); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; }
         .tank-val { font-size: 2.5rem; font-weight: 900; text-align: center; margin-top: 10px; transition: color 0.3s; }
 
-        /* UI Elements */
         .input-box { width: 100%; padding: 14px; border-radius: 12px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; outline: none; transition: background 0.3s, border 0.3s; }
         .input-box:focus { border-color: var(--prim); background: var(--surf); }
         
@@ -271,11 +264,9 @@
     </div>
 
     <script>
-        // --- ETAT GLOBAL ---
         const AppState = {
             volume: 0, 
-            // Modification : Volume par défaut passé à 5 Litres
-            maxVolume: parseInt(localStorage.getItem('max_v')) || 5,
+            maxVolume: parseInt(localStorage.getItem('max_v')) || 5, // Par défaut à 5L
             isRaining: false, 
             schedules: [], 
             location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
@@ -283,7 +274,6 @@
             lastTrigger: ""
         };
 
-        // --- GESTION DU JOURNAL ---
         function addLog(message) {
             const now = new Date();
             const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
@@ -309,7 +299,6 @@
         }
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); showToast("Journal effacé"); }
 
-        // --- MOTEUR INTELLIGENT ---
         const SmartEngine = {
             timer: null,
             async boost(mins) {
@@ -340,7 +329,6 @@
             }
         };
 
-        // --- CONNEXION SERVEUR ---
         async function fetchAll() {
             try {
                 const res = await fetch('/.netlify/functions/get-status');
@@ -388,7 +376,6 @@
             sendPump(e.target.checked);
         };
 
-        // --- MÉTÉO AVANCÉE ---
         const weatherCodes = {
             0: { i: "☀️", t: "Ensoleillé" }, 1: { i: "🌤️", t: "Peu nuageux" }, 2: { i: "⛅", t: "Nuageux" }, 3: { i: "☁️", t: "Couvert" },
             45: { i: "🌫️", t: "Brouillard" }, 48: { i: "🌫️", t: "Brouillard givrant" },
@@ -420,34 +407,32 @@
                 document.getElementById('w-wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
                 document.getElementById('w-minmax').textContent = `${Math.round(day.temperature_2m_min[0])}° / ${Math.round(day.temperature_2m_max[0])}°`;
 
-                // --- RECOMMANDATION DYNAMIQUE D'ARROSAGE ---
                 let adviceText = "";
                 let adviceColor = "";
                 
                 if (AppState.isRaining) {
                     adviceText = "Arrosage inutile, précipitations en cours ou prévues.";
-                    adviceColor = "var(--prim)"; // Bleu
+                    adviceColor = "var(--prim)"; 
                 } else if (cur.temperature_2m >= 25) {
                     adviceText = "Temps très chaud et sec. Un arrosage abondant est recommandé (de préférence le soir).";
-                    adviceColor = "var(--warning)"; // Orange
+                    adviceColor = "var(--warning)"; 
                 } else if (cur.temperature_2m >= 15) {
                     adviceText = "Temps sec et clément. Un arrosage régulier est conseillé pour maintenir l'humidité.";
-                    adviceColor = "var(--success)"; // Vert
+                    adviceColor = "var(--success)"; 
                 } else if (cur.temperature_2m <= 5) {
                     adviceText = "Températures proches du gel. Ne surtout pas arroser pour éviter d'endommager les plantes.";
-                    adviceColor = "var(--prim-l)"; // Bleu clair
+                    adviceColor = "var(--prim-l)"; 
                 } else {
                     adviceText = "Temps frais. L'arrosage n'est généralement pas nécessaire sauf en cas de sol très sec.";
-                    adviceColor = "var(--text-dim)"; // Gris
+                    adviceColor = "var(--text-dim)"; 
                 }
 
                 document.getElementById('w-advice-text').textContent = adviceText;
                 document.getElementById('w-advice-box').style.borderLeftColor = adviceColor;
 
-            } catch(e) { console.error("Erreur API Météo"); }
+            } catch(e) {}
         }
 
-        // --- AUTOCOMPLÉTION VILLE ---
         const searchInput = document.getElementById('city-search');
         const resultsBox = document.getElementById('city-results');
         let searchTimeout;
@@ -482,7 +467,6 @@
             }, 500);
         });
 
-        // --- PLANNING UI ---
         async function saveNewPlan() {
             const time = document.getElementById('time-in').value;
             const duration = document.getElementById('dur-in').value;
@@ -511,23 +495,19 @@
             addLog("🗑️ Programme supprimé");
         }
 
-        // --- THEMES & REGLAGES ---
         async function vidangerCuve() {
             if(!confirm("Êtes-vous sûr de vouloir remettre le volume à 0 Litre ?")) return;
 
             try {
-                // Envoi de l'ordre 0L à la base de données
                 await fetch('/.netlify/functions/update-volume', { 
                     method: 'POST', 
                     body: JSON.stringify({ volume_eau: 0.0 }) 
                 });
                 
-                // Mise à jour immédiate de l'interface visuelle
                 AppState.volume = 0;
                 document.getElementById('vol-txt').innerHTML = "<span style='color:#ef4444'>VIDE !</span>";
                 document.getElementById('water-level').style.height = "0%";
                 
-                // Si la pompe tournait, on force l'arrêt
                 document.getElementById('pump-toggle').checked = false;
                 await sendPump(false);
                 
@@ -579,7 +559,6 @@
             showToast("Préférences enregistrées !");
         }
 
-        // --- NAVIGATION ---
         function showView(id, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
