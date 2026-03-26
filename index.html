@@ -169,7 +169,7 @@
                 <h3 id="tank-label" style="text-align: center;">Réserve de Liquide</h3>
                 <div class="tank-mini"><div id="water-level" class="water-mini"></div></div>
                 <div class="tank-val" id="vol-txt">-- L</div>
-                <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: sans-serif; margin-top: 5px;">Max : <span id="max-txt">50</span>L</div>
+                <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: sans-serif; margin-top: 5px;">Max : <span id="max-txt">5</span>L</div>
             </div>
 
             <div class="card">
@@ -242,7 +242,7 @@
             </div>
             <div class="card">
                 <h3>⚙️ Paramètres Cuve</h3>
-                <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)">
+                <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)" value="5">
             </div>
             
             <div class="card">
@@ -266,7 +266,7 @@
     <script>
         const AppState = {
             volume: 0, 
-            maxVolume: parseInt(localStorage.getItem('max_v')) || 5, // Par défaut à 5L
+            maxVolume: parseInt(localStorage.getItem('max_v')) || 5, // Volume par défaut à 5L
             isRaining: false, 
             schedules: [], 
             location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
