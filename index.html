@@ -268,7 +268,7 @@
         // --- ETAT GLOBAL ---
         const AppState = {
             volume: 0, 
-            maxVolume: parseInt(localStorage.getItem('max_v')) || 50,
+            maxVolume: parseInt(localStorage.getItem('max_v')) || 5,
             isRaining: false, 
             schedules: [], 
             location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
