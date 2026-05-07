@@ -58,6 +58,7 @@
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
+        /* Widget Météo */
         .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
         .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -66,10 +67,20 @@
         .w-det-item { font-size: 0.85rem; color: var(--text-dim); font-weight: bold; display: block; }
         .w-det-val { font-size: 1.1rem; color: var(--text); margin-top: 4px; display: block; }
 
+        .weather-advice { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 10px; font-size: 0.85rem; color: var(--text); border-left: 4px solid var(--prim); font-family: sans-serif; line-height: 1.4; transition: border-color 0.3s; }
+
+        /* Autocomplétion Ville */
+        .search-container { position: relative; }
+        #city-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--surf); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-top: 5px; z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
+        .city-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; color: var(--text); font-family: sans-serif; font-size: 0.9rem; }
+        .city-result-item:hover { background: var(--surf-alt); color: var(--prim-l); }
+
+        /* Cuve Dynamique */
         .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: border 0.3s, border-radius 0.3s; }
         .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--water-bg); border-top: var(--foam); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; }
         .tank-val { font-size: 2.5rem; font-weight: 900; text-align: center; margin-top: 10px; transition: color 0.3s; }
 
+        /* UI Elements */
         .input-box { width: 100%; padding: 14px; border-radius: 12px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; outline: none; transition: background 0.3s, border 0.3s; }
         .input-box:focus { border-color: var(--prim); background: var(--surf); }
         
@@ -137,6 +148,17 @@
                         <span class="w-det-val" id="w-minmax">--° / --°</span>
                     </div>
                 </div>
+
+                <div class="weather-advice" id="w-advice-box">
+                    <strong style="color: var(--text-dim);">💡 Analyse Météo :</strong><br>
+                    <span id="w-advice-text">Chargement des données...</span>
+                </div>
+
+                <hr style="margin: 20px 0 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-family: sans-serif;">
+                    <small id="rain-label" style="font-weight: bold; font-size: 0.9rem;">Désactiver si pluie</small>
+                    <label class="switch"><input type="checkbox" id="rain-toggle" checked><span class="slider"></span></label>
+                </div>
             </div>
 
             <div class="card">
@@ -199,6 +221,13 @@
                 </select>
             </div>
             <div class="card">
+                <h3>🌍 Ville & Météo</h3>
+                <div class="search-container">
+                    <input type="text" id="city-search" class="input-box" placeholder="Rechercher une ville..." autocomplete="off">
+                    <div id="city-results"></div>
+                </div>
+            </div>
+            <div class="card">
                 <h3>⚙️ Paramètres Cuve</h3>
                 <input type="number" id="max-in" class="input-box" placeholder="Capacité Cuve (L)" value="5">
             </div>
@@ -220,17 +249,24 @@
     </div>
 
     <script>
+        // --- ÉTAT GLOBAL ---
         const AppState = {
             volume: 0, 
             maxVolume: parseInt(localStorage.getItem('max_v')) || 5,
-            location: { name: "Molsheim", lat: 48.54, lon: 7.49 },
-            logs: JSON.parse(localStorage.getItem('sys_logs')) || []
+            isRaining: false, 
+            schedules: JSON.parse(localStorage.getItem('arrosage_plan')) || [], 
+            location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
+            logs: JSON.parse(localStorage.getItem('sys_logs')) || [],
+            lastTrigger: "",
+            syncIntervalId: null
         };
 
+        // --- GESTION DU JOURNAL ---
         function addLog(message) {
             const now = new Date();
             const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-            AppState.logs.unshift({ msg: message, time: timeStr });
+            const dateStr = String(now.getDate()).padStart(2, '0') + "/" + String(now.getMonth() + 1).padStart(2, '0');
+            AppState.logs.unshift({ msg: message, time: `${dateStr} - ${timeStr}` });
             if (AppState.logs.length > 40) AppState.logs.pop();
             localStorage.setItem('sys_logs', JSON.stringify(AppState.logs));
             renderLogs();
@@ -245,10 +281,15 @@
         }
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); }
 
+        // --- MOTEUR INTELLIGENT ---
         const SmartEngine = {
             async boost(mins) {
+                if (AppState.isRaining && document.getElementById('rain-toggle').checked) {
+                    addLog("☔ Action annulée (Pluie)");
+                    return showToast("Pluie : Action bloquée ☔");
+                }
                 if (AppState.volume <= 0.2) return showToast("Impossible : Réservoir vide !");
-                // On envoie la durée à l'Arduino
+                
                 await sendPump(true, mins);
                 showToast(`Chrono lancé : ${mins} min`);
                 addLog(`▶️ Boost (${mins} min)`);
@@ -259,7 +300,10 @@
             }
         };
 
+        // --- COMMUNICATION ARDUINO/NETLIFY ---
         async function fetchAll() {
+            if (document.hidden) return; // Optimisation : pas de réseau si l'application est en arrière-plan
+            
             try {
                 const res = await fetch('/.netlify/functions/get-status');
                 const data = await res.json();
@@ -273,14 +317,20 @@
                 if(AppState.volume <= 0.2) txt.style.color = "#ef4444"; else txt.style.color = "inherit";
 
                 document.getElementById('pump-toggle').checked = data.pompe_etat;
+                updateThemeLabels(document.body.className, data.pompe_etat);
                 
-                // Gestion bannière
                 if (!data.pompe_etat) {
                     document.getElementById('active-banner').style.display = 'none';
                     document.getElementById('stop-btn').style.display = 'none';
                 } else {
                     document.getElementById('active-banner').style.display = 'block';
                     document.getElementById('stop-btn').style.display = 'block';
+                }
+
+                if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
+                    AppState.schedules = data.planning || [];
+                    localStorage.setItem('arrosage_plan', JSON.stringify(AppState.schedules));
+                    renderPlans();
                 }
 
                 document.getElementById('badge').style.color = "var(--prim-l)";
@@ -304,10 +354,143 @@
             addLog(e.target.checked ? "▶️ Allumage manuel" : "🛑 Extinction manuelle");
         };
 
+        // --- MÉTÉO (RESTAURÉE) ---
+        const weatherCodes = {
+            0: { i: "☀️", t: "Ensoleillé" }, 1: { i: "🌤️", t: "Peu nuageux" }, 2: { i: "⛅", t: "Nuageux" }, 3: { i: "☁️", t: "Couvert" },
+            45: { i: "🌫️", t: "Brouillard" }, 48: { i: "🌫️", t: "Brouillard givrant" },
+            51: { i: "🌧️", t: "Bruine légère" }, 53: { i: "🌧️", t: "Bruine modérée" }, 55: { i: "🌧️", t: "Bruine dense" },
+            61: { i: "☔", t: "Pluie faible" }, 63: { i: "☔", t: "Pluie modérée" }, 65: { i: "☔", t: "Pluie forte" },
+            71: { i: "❄️", t: "Neige faible" }, 73: { i: "❄️", t: "Neige modérée" }, 75: { i: "❄️", t: "Neige forte" },
+            95: { i: "🌩️", t: "Orage" }, 96: { i: "⛈️", t: "Orage violent" }
+        };
+
+        async function fetchWeather() {
+            try {
+                const { lat, lon, name } = AppState.location;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const cur = data.current;
+                const day = data.daily;
+                const weather = weatherCodes[cur.weather_code] || { i: "☁️", t: "Inconnu" };
+                
+                AppState.isRaining = cur.weather_code >= 51;
+
+                document.getElementById('w-city-display').textContent = `📍 ${name}`;
+                document.getElementById('w-temp').textContent = `${Math.round(cur.temperature_2m)}°`;
+                document.getElementById('w-desc').textContent = weather.t;
+                document.getElementById('w-icon').textContent = weather.i;
+                
+                document.getElementById('w-hum').textContent = `${cur.relative_humidity_2m}%`;
+                document.getElementById('w-wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
+                document.getElementById('w-minmax').textContent = `${Math.round(day.temperature_2m_min[0])}° / ${Math.round(day.temperature_2m_max[0])}°`;
+
+                let adviceText = "";
+                let adviceColor = "";
+                
+                if (AppState.isRaining) {
+                    adviceText = "Arrosage inutile, précipitations en cours ou prévues.";
+                    adviceColor = "var(--prim)"; 
+                } else if (cur.temperature_2m >= 25) {
+                    adviceText = "Temps très chaud et sec. Un arrosage abondant est recommandé (de préférence le soir).";
+                    adviceColor = "var(--warning)"; 
+                } else if (cur.temperature_2m >= 15) {
+                    adviceText = "Temps sec et clément. Un arrosage régulier est conseillé pour maintenir l'humidité.";
+                    adviceColor = "var(--success)"; 
+                } else if (cur.temperature_2m <= 5) {
+                    adviceText = "Températures proches du gel. Ne surtout pas arroser pour éviter d'endommager les plantes.";
+                    adviceColor = "var(--prim-l)"; 
+                } else {
+                    adviceText = "Temps frais. L'arrosage n'est généralement pas nécessaire sauf en cas de sol très sec.";
+                    adviceColor = "var(--text-dim)"; 
+                }
+
+                document.getElementById('w-advice-text').textContent = adviceText;
+                document.getElementById('w-advice-box').style.borderLeftColor = adviceColor;
+            } catch(e) {
+                document.getElementById('w-advice-text').textContent = "Données météo indisponibles pour le moment.";
+            }
+        }
+
+        // --- RECHERCHE VILLE (RESTAURÉE) ---
+        const searchInput = document.getElementById('city-search');
+        const resultsBox = document.getElementById('city-results');
+        let searchTimeout;
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const val = e.target.value;
+            if(val.length < 3) { resultsBox.style.display = 'none'; return; }
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${val}&count=5&language=fr`);
+                    const data = await res.json();
+                    
+                    if(data.results && data.results.length > 0) {
+                        resultsBox.innerHTML = '';
+                        data.results.forEach(city => {
+                            const div = document.createElement('div');
+                            div.className = 'city-result-item';
+                            div.textContent = `${city.name} (${city.country})`;
+                            div.onclick = () => {
+                                AppState.location = { name: city.name, lat: city.latitude, lon: city.longitude };
+                                searchInput.value = city.name;
+                                resultsBox.style.display = 'none';
+                                localStorage.setItem('arrosage_loc', JSON.stringify(AppState.location));
+                                fetchWeather();
+                                showToast("Ville sélectionnée !");
+                            };
+                            resultsBox.appendChild(div);
+                        });
+                        resultsBox.style.display = 'block';
+                    }
+                } catch(e) {}
+            }, 500);
+        });
+
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.search-container')) resultsBox.style.display = 'none';
+        });
+
+        // --- PLANNING (RESTAURÉ) ---
+        async function saveNewPlan() {
+            const time = document.getElementById('time-in').value;
+            const duration = document.getElementById('dur-in').value;
+            const days = Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value);
+            
+            if(!time || !duration || days.length === 0) return showToast("Veuillez remplir tous les champs !");
+            
+            AppState.schedules.push({ time, duration, days });
+            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
+            localStorage.setItem('arrosage_plan', JSON.stringify(AppState.schedules));
+            renderPlans();
+            addLog(`📅 Prog ajouté: ${time} (${days.length}j)`);
+            showToast("Programme sauvegardé !");
+        }
+
+        function renderPlans() {
+            const cont = document.getElementById('plan-list'); cont.innerHTML = "";
+            AppState.schedules.forEach((p, i) => {
+                cont.innerHTML += `<div class="list-item" style="animation: slideUp 0.3s ease forwards; animation-delay: ${i * 0.1}s;"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:var(--danger); font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer; transition: transform 0.2s;">✖</button></div>`;
+            });
+        }
+
+        async function delPlan(i) {
+            AppState.schedules.splice(i, 1);
+            await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
+            localStorage.setItem('arrosage_plan', JSON.stringify(AppState.schedules));
+            renderPlans();
+            addLog("🗑️ Programme supprimé");
+        }
+
+        // --- PARAMÈTRES ---
         async function vidangerCuve() {
             if(!confirm("Remettre le volume à 0 Litre ?")) return;
             await fetch('/.netlify/functions/update-volume', { method: 'POST', body: JSON.stringify({ volume_eau: 0.0 }) });
             showToast("Cuve vidangée !");
+            addLog("🗑️ Vidange manuelle (0L)");
         }
 
         function saveSettings() {
@@ -319,6 +502,13 @@
         }
 
         function previewTheme() { document.body.className = document.getElementById('theme-select').value; }
+
+        function updateThemeLabels(theme, isRunning) {
+            const title = document.getElementById('main-title');
+            if(theme === 'theme-noah') title.textContent = "Noah Tavern 🍺";
+            else if(theme === 'theme-tom') title.textContent = "Tom Trail Pro 🏃";
+            else title.textContent = "Arrosage 2000";
+        }
 
         function showView(id, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -332,22 +522,50 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); 
         }
 
+        // --- INITIALISATION & BOUCLES ---
         window.onload = () => {
             const theme = localStorage.getItem('arrosage_theme') || 'theme-cyber';
             document.body.className = theme;
             document.getElementById('theme-select').value = theme;
             document.getElementById('max-txt').textContent = AppState.maxVolume;
+            document.getElementById('city-search').value = AppState.location.name;
+            
             renderLogs();
+            renderPlans();
+            fetchWeather();
             fetchAll();
-            setInterval(fetchAll, 2000);
-        };
+            
+            // Boucle de mise à jour rapide (2s) - Suspendue si onglet inactif
+            AppState.syncIntervalId = setInterval(fetchAll, 2000);
+            
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    clearInterval(AppState.syncIntervalId);
+                } else {
+                    fetchAll(); // Synchro immédiate au retour
+                    AppState.syncIntervalId = setInterval(fetchAll, 2000);
+                    fetchWeather(); // Actualise la météo au retour
+                }
+            });
 
-        function updateThemeLabels(theme, isRunning) {
-            const title = document.getElementById('main-title');
-            if(theme === 'theme-noah') title.textContent = "Noah Tavern 🍺";
-            else if(theme === 'theme-tom') title.textContent = "Tom Trail Pro 🏃";
-            else title.textContent = "Arrosage 2000";
-        }
+            // Boucle Météo (toutes les 30 min)
+            setInterval(fetchWeather, 1800000); 
+
+            // Boucle de vérification du planning (toutes les 30s)
+            setInterval(() => {
+                const now = new Date();
+                const cur = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+                const curDay = ['Di','Lu','Ma','Me','Je','Ve','Sa'][now.getDay()];
+
+                AppState.schedules.forEach(p => {
+                    if(p.time === cur && p.days.includes(curDay) && AppState.lastTrigger !== cur) {
+                        AppState.lastTrigger = cur;
+                        addLog("⏰ Déclenchement Auto");
+                        SmartEngine.boost(parseInt(p.duration));
+                    }
+                });
+            }, 30000);
+        };
     </script>
 </body>
 </html>
