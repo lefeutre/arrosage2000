@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Arrosage 2000 Pro</title>
     <style>
-        /* --- MOTEUR DE THÈMES --- */
         :root {
             --bg: #080c16; --surf: #151e32; --surf-alt: rgba(255, 255, 255, 0.05);
             --text: #f8fafc; --text-dim: #94a3b8; --prim: #0ea5e9; --prim-l: #38bdf8;
@@ -38,7 +37,6 @@
             --water-bg: linear-gradient(to bottom, #06b6d4, #0369a1);
         }
 
-        /* --- STYLES GLOBAUX --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); padding-bottom: 110px; display: flex; justify-content: center; transition: background-color 0.4s ease, color 0.4s ease; }
         .app-container { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; }
@@ -58,7 +56,6 @@
         #active-banner { display: none; background: var(--prim); color: var(--bg); padding: 12px; border-radius: var(--rad); margin-bottom: 15px; text-align: center; font-weight: 900; animation: blink 1.5s infinite; font-family: sans-serif; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-        /* Widget Météo */
         .weather-temp { font-size: 2.5rem; font-weight: 900; font-family: sans-serif; }
         .weather-icon { font-size: 3.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -69,18 +66,15 @@
 
         .weather-advice { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.15); border-radius: 10px; font-size: 0.85rem; color: var(--text); border-left: 4px solid var(--prim); font-family: sans-serif; line-height: 1.4; transition: border-color 0.3s; }
 
-        /* Autocomplétion Ville */
         .search-container { position: relative; }
         #city-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--surf); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-top: 5px; z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
         .city-result-item { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; color: var(--text); font-family: sans-serif; font-size: 0.9rem; }
         .city-result-item:hover { background: var(--surf-alt); color: var(--prim-l); }
 
-        /* Cuve Dynamique */
         .tank-mini { width: 90px; height: 150px; border: var(--tank-border); border-radius: var(--tank-rad); margin: 15px auto; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transition: border 0.3s, border-radius 0.3s; }
         .water-mini { position: absolute; bottom: 0; width: 100%; background: var(--water-bg); border-top: var(--foam); transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; }
         .tank-val { font-size: 2.5rem; font-weight: 900; text-align: center; margin-top: 10px; transition: color 0.3s; }
 
-        /* UI Elements */
         .input-box { width: 100%; padding: 14px; border-radius: 12px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text); margin-bottom: 12px; font-size: 1rem; outline: none; transition: background 0.3s, border 0.3s; }
         .input-box:focus { border-color: var(--prim); background: var(--surf); }
         
@@ -111,6 +105,13 @@
         
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--surf-alt); border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; transition: background 0.3s; }
         .log-time { color: var(--text-dim); font-size: 0.8rem; }
+
+        /* Styles Graphique */
+        .chart-container { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 160px; padding: 15px 0; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
+        .chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; height: 100%; gap: 5px; }
+        .chart-bar { width: 100%; background: var(--prim); border-radius: 4px 4px 0 0; transition: height 0.5s ease; min-height: 2px; }
+        .chart-lbl { font-size: 0.65rem; color: var(--text-dim); font-family: sans-serif; text-align: center; }
+        .chart-val { font-size: 0.7rem; color: var(--text); font-weight: bold; font-family: sans-serif; }
     </style>
 </head>
 <body class="theme-cyber">
@@ -166,6 +167,9 @@
                 <div class="tank-mini"><div id="water-level" class="water-mini"></div></div>
                 <div class="tank-val" id="vol-txt">-- L</div>
                 <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; font-family: sans-serif; margin-top: 5px;">Max : <span id="max-txt">5</span>L</div>
+                <div id="autonomy-txt" style="text-align: center; font-weight: bold; color: var(--prim-l); font-size: 0.9rem; font-family: sans-serif; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
+                    Autonomie estimée : Calcul en cours...
+                </div>
             </div>
 
             <div class="card">
@@ -204,13 +208,39 @@
 
         <main id="view-stats" class="view">
             <div class="card">
-                <h3>Historique d'activité</h3>
-                <div id="logs-container" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;"></div>
+                <h3>Consommation (7 derniers jours)</h3>
+                <div id="chart-area" class="chart-container">
+                    </div>
+                <div style="text-align: center; font-size: 0.8rem; color: var(--text-dim); font-family: sans-serif;">Consommation en Litres</div>
+            </div>
+
+            <div class="card">
+                <h3>Journal d'activité</h3>
+                <div id="logs-container" style="max-height: 40vh; overflow-y: auto; padding-right: 5px;"></div>
                 <button onclick="clearLogs()" style="width: 100%; padding: 12px; margin-top: 15px; background: var(--surf-alt); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); border-radius: 12px; cursor: pointer; font-weight: bold;">Effacer l'historique</button>
             </div>
         </main>
 
         <main id="view-settings" class="view">
+            <div class="card">
+                <h3>Intelligences & Sécurités</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-family: sans-serif;">
+                    <div>
+                        <strong style="font-size: 0.95rem;">Notifications Push</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-dim);">Alertes de cuve et d'arrosage</div>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="notif-toggle" onchange="toggleNotifications(this)"><span class="slider"></span></label>
+                </div>
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-family: sans-serif;">
+                    <div>
+                        <strong style="font-size: 0.95rem;">Ajustement Météo Auto</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-dim);">Modifie la durée selon la chaleur</div>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="smart-weather-toggle" checked><span class="slider"></span></label>
+                </div>
+            </div>
+
             <div class="card">
                 <h3>Ambiances</h3>
                 <select id="theme-select" class="input-box" onchange="previewTheme()">
@@ -241,7 +271,7 @@
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showView('view-home', this)"><span class="icon">🏠</span>Accueil</button>
             <button class="nav-item" onclick="showView('view-plan', this)"><span class="icon">📅</span>Planning</button>
-            <button class="nav-item" onclick="showView('view-stats', this)"><span class="icon">📋</span>Journal</button>
+            <button class="nav-item" onclick="showView('view-stats', this)"><span class="icon">📊</span>Stats</button>
             <button class="nav-item" onclick="showView('view-settings', this)"><span class="icon">⚙️</span>Réglages</button>
         </nav>
         
@@ -252,16 +282,39 @@
         // --- ÉTAT GLOBAL ---
         const AppState = {
             volume: 0, 
+            lastRecordedVolume: null,
             maxVolume: parseInt(localStorage.getItem('max_v')) || 5,
             isRaining: false, 
+            lastTemp: 20,
             schedules: JSON.parse(localStorage.getItem('arrosage_plan')) || [], 
             location: JSON.parse(localStorage.getItem('arrosage_loc')) || { name: "Molsheim", lat: 48.54, lon: 7.49 },
             logs: JSON.parse(localStorage.getItem('sys_logs')) || [],
+            dailyUsage: JSON.parse(localStorage.getItem('sys_usage')) || {},
             lastTrigger: "",
-            syncIntervalId: null
+            syncIntervalId: null,
+            notifGranted: Notification.permission === "granted"
         };
 
-        // --- GESTION DU JOURNAL ---
+        // --- NOTIFICATIONS PUSH ---
+        function toggleNotifications(checkbox) {
+            if (checkbox.checked && Notification.permission !== "granted") {
+                Notification.requestPermission().then(permission => {
+                    AppState.notifGranted = permission === "granted";
+                    checkbox.checked = AppState.notifGranted;
+                    if(AppState.notifGranted) sendPush("Notifications activées", "Le système peut désormais vous alerter.");
+                });
+            } else {
+                AppState.notifGranted = checkbox.checked;
+            }
+        }
+
+        function sendPush(title, body) {
+            if (AppState.notifGranted && document.getElementById('notif-toggle').checked) {
+                new Notification(title, { body: body, icon: "💧" });
+            }
+        }
+
+        // --- GESTION DU JOURNAL ET CONSO ---
         function addLog(message) {
             const now = new Date();
             const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
@@ -281,18 +334,82 @@
         }
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); }
 
+        // --- GRAPHIQUES ET AUTONOMIE ---
+        function renderChart() {
+            const cont = document.getElementById('chart-area');
+            cont.innerHTML = '';
+            
+            // Récupère les 7 derniers jours
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                dates.push(d.toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit'}));
+            }
+
+            let maxVal = 0.1;
+            const values = dates.map(date => {
+                let val = AppState.dailyUsage[date] || 0;
+                if(val > maxVal) maxVal = val;
+                return { date, val };
+            });
+
+            values.forEach(data => {
+                const heightPct = (data.val / maxVal) * 100;
+                cont.innerHTML += `
+                    <div class="chart-col">
+                        <span class="chart-val">${data.val > 0 ? data.val.toFixed(1) : ''}</span>
+                        <div class="chart-bar" style="height: ${heightPct}%;"></div>
+                        <span class="chart-lbl">${data.date.substring(0,5)}</span>
+                    </div>
+                `;
+            });
+
+            // Calcul Autonomie
+            let total = 0; let joursUtilises = 0;
+            values.forEach(d => { if(d.val > 0) { total += d.val; joursUtilises++; } });
+            
+            const autoTxt = document.getElementById('autonomy-txt');
+            if(joursUtilises === 0 || AppState.volume <= 0.2) {
+                autoTxt.textContent = AppState.volume <= 0.2 ? "Autonomie : Cuve Vide" : "Autonomie : Données insuffisantes";
+                autoTxt.style.color = "var(--text-dim)";
+            } else {
+                let avg = total / joursUtilises;
+                let daysLeft = Math.floor(AppState.volume / avg);
+                autoTxt.textContent = `Autonomie estimée : ~${daysLeft} jour(s)`;
+                autoTxt.style.color = daysLeft <= 1 ? "#ef4444" : "var(--success)";
+            }
+        }
+
         // --- MOTEUR INTELLIGENT ---
         const SmartEngine = {
-            async boost(mins) {
+            async boost(mins, isAuto = false) {
                 if (AppState.isRaining && document.getElementById('rain-toggle').checked) {
                     addLog("☔ Action annulée (Pluie)");
                     return showToast("Pluie : Action bloquée ☔");
                 }
                 if (AppState.volume <= 0.2) return showToast("Impossible : Réservoir vide !");
                 
-                await sendPump(true, mins);
-                showToast(`Chrono lancé : ${mins} min`);
-                addLog(`▶️ Boost (${mins} min)`);
+                let finalMins = mins;
+                let autoNote = "";
+
+                // Modulateur Météo
+                if (document.getElementById('smart-weather-toggle').checked) {
+                    if (AppState.lastTemp >= 25) {
+                        finalMins = Math.round(mins * 1.5);
+                        autoNote = " (Majoré: Chaleur)";
+                    } else if (AppState.lastTemp <= 15) {
+                        finalMins = Math.round(mins * 0.5);
+                        if(finalMins < 1) finalMins = 1;
+                        autoNote = " (Réduit: Fraîcheur)";
+                    }
+                }
+                
+                await sendPump(true, finalMins);
+                showToast(`Chrono lancé : ${finalMins} min`);
+                addLog(`▶️ ${isAuto ? 'Auto' : 'Boost'} (${finalMins}m)${autoNote}`);
+                
+                if(isAuto) sendPush("Arrosage Démarré", `Durée : ${finalMins} minutes${autoNote}`);
             },
             async stop() {
                 await sendPump(false, 0);
@@ -302,19 +419,35 @@
 
         // --- COMMUNICATION ARDUINO/NETLIFY ---
         async function fetchAll() {
-            if (document.hidden) return; // Optimisation : pas de réseau si l'application est en arrière-plan
+            if (document.hidden) return; 
             
             try {
                 const res = await fetch('/.netlify/functions/get-status');
                 const data = await res.json();
                 
-                AppState.volume = parseFloat(data.volume_eau);
+                // Calcul Consommation Journalière
+                let newVol = parseFloat(data.volume_eau);
+                if (AppState.lastRecordedVolume !== null && newVol < AppState.lastRecordedVolume - 0.05) {
+                    let consumed = AppState.lastRecordedVolume - newVol;
+                    let today = new Date().toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit'});
+                    AppState.dailyUsage[today] = (AppState.dailyUsage[today] || 0) + consumed;
+                    localStorage.setItem('sys_usage', JSON.stringify(AppState.dailyUsage));
+                    renderChart();
+                }
+                AppState.lastRecordedVolume = newVol;
+                AppState.volume = newVol;
+
                 const pct = (AppState.volume / AppState.maxVolume) * 100;
                 document.getElementById('water-level').style.height = Math.min(pct, 100) + "%";
                 
                 const txt = document.getElementById('vol-txt');
                 txt.textContent = AppState.volume <= 0.2 ? "VIDE !" : AppState.volume.toFixed(1) + " L";
-                if(AppState.volume <= 0.2) txt.style.color = "#ef4444"; else txt.style.color = "inherit";
+                if(AppState.volume <= 0.2) {
+                    txt.style.color = "#ef4444";
+                    if(data.pompe_etat) sendPush("Sécurité Activée", "La cuve est vide, pompe arrêtée.");
+                } else {
+                    txt.style.color = "inherit";
+                }
 
                 document.getElementById('pump-toggle').checked = data.pompe_etat;
                 updateThemeLabels(document.body.className, data.pompe_etat);
@@ -354,7 +487,7 @@
             addLog(e.target.checked ? "▶️ Allumage manuel" : "🛑 Extinction manuelle");
         };
 
-        // --- MÉTÉO (RESTAURÉE) ---
+        // --- MÉTÉO ---
         const weatherCodes = {
             0: { i: "☀️", t: "Ensoleillé" }, 1: { i: "🌤️", t: "Peu nuageux" }, 2: { i: "⛅", t: "Nuageux" }, 3: { i: "☁️", t: "Couvert" },
             45: { i: "🌫️", t: "Brouillard" }, 48: { i: "🌫️", t: "Brouillard givrant" },
@@ -376,6 +509,7 @@
                 const weather = weatherCodes[cur.weather_code] || { i: "☁️", t: "Inconnu" };
                 
                 AppState.isRaining = cur.weather_code >= 51;
+                AppState.lastTemp = cur.temperature_2m; // Sauvegarde pour SmartWeather
 
                 document.getElementById('w-city-display').textContent = `📍 ${name}`;
                 document.getElementById('w-temp').textContent = `${Math.round(cur.temperature_2m)}°`;
@@ -413,7 +547,7 @@
             }
         }
 
-        // --- RECHERCHE VILLE (RESTAURÉE) ---
+        // --- RECHERCHE VILLE ---
         const searchInput = document.getElementById('city-search');
         const resultsBox = document.getElementById('city-results');
         let searchTimeout;
@@ -454,7 +588,7 @@
             if(!e.target.closest('.search-container')) resultsBox.style.display = 'none';
         });
 
-        // --- PLANNING (RESTAURÉ) ---
+        // --- PLANNING ---
         async function saveNewPlan() {
             const time = document.getElementById('time-in').value;
             const duration = document.getElementById('dur-in').value;
@@ -499,6 +633,7 @@
             localStorage.setItem('arrosage_theme', document.getElementById('theme-select').value);
             document.body.className = document.getElementById('theme-select').value;
             showToast("Réglages sauvés");
+            renderChart(); // Recalcule l'autonomie
         }
 
         function previewTheme() { document.body.className = document.getElementById('theme-select').value; }
@@ -529,29 +664,28 @@
             document.getElementById('theme-select').value = theme;
             document.getElementById('max-txt').textContent = AppState.maxVolume;
             document.getElementById('city-search').value = AppState.location.name;
+            document.getElementById('notif-toggle').checked = AppState.notifGranted;
             
             renderLogs();
             renderPlans();
+            renderChart();
             fetchWeather();
             fetchAll();
             
-            // Boucle de mise à jour rapide (2s) - Suspendue si onglet inactif
             AppState.syncIntervalId = setInterval(fetchAll, 2000);
             
             document.addEventListener("visibilitychange", () => {
                 if (document.hidden) {
                     clearInterval(AppState.syncIntervalId);
                 } else {
-                    fetchAll(); // Synchro immédiate au retour
+                    fetchAll(); 
                     AppState.syncIntervalId = setInterval(fetchAll, 2000);
-                    fetchWeather(); // Actualise la météo au retour
+                    fetchWeather(); 
                 }
             });
 
-            // Boucle Météo (toutes les 30 min)
             setInterval(fetchWeather, 1800000); 
 
-            // Boucle de vérification du planning (toutes les 30s)
             setInterval(() => {
                 const now = new Date();
                 const cur = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
@@ -560,8 +694,7 @@
                 AppState.schedules.forEach(p => {
                     if(p.time === cur && p.days.includes(curDay) && AppState.lastTrigger !== cur) {
                         AppState.lastTrigger = cur;
-                        addLog("⏰ Déclenchement Auto");
-                        SmartEngine.boost(parseInt(p.duration));
+                        SmartEngine.boost(parseInt(p.duration), true);
                     }
                 });
             }, 30000);
