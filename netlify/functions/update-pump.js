@@ -1,64 +1,28 @@
-// Si tu as des lignes d'importation pour ta base de données en haut, GARDE-LES ici !
-// Exemple : const { createClient } = require('@supabase/supabase-js');
+import { neon } from '@netlify/neon';
 
-// Stockage temporaire globale (utilisé si tu n'as pas de base de données)
-if (!global.systemState) {
-    global.systemState = { pompe_etat: false, volume_eau: 5.0, duree: 0, reset_ap: false, planning: [] };
-}
+export const handler = async (event) => {
+  // On s'assure que c'est bien une requête pour envoyer des données (POST)
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Méthode non autorisée' };
+  }
 
-exports.handler = async (event, context) => {
-    // Gestion du protocole CORS pour éviter les blocages de sécurité navigateurs
-    if (event.httpMethod === "OPTIONS") {
-        return {
-            statusCode: 200,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type",
-                "Access-Control-Allow-Methods": "POST, OPTIONS"
-            }
-        };
-    }
+  try {
+    // On lit ce que le site web nous a envoyé (pompe, durée et ordre de reset)
+    const data = JSON.parse(event.body);
+    const nouvelEtatPompe = data.pompe_etat; 
+    const nouvelleDuree = data.duree !== undefined ? data.duree : 0;
+    const nouvelEtatResetAP = data.reset_ap !== undefined ? data.reset_ap : false;
 
-    if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: "Méthode non autorisée" };
-    }
-
-    try {
-        const data = JSON.parse(event.body);
-        
-        // 1. Extraction propre de toutes les variables transmises
-        const nouvelEtatPompe = data.pompe_etat;
-        const nouvelleDuree = data.duree !== undefined ? data.duree : 0;
-        const nouvelEtatResetAP = data.reset_ap !== undefined ? data.reset_ap : false;
-
-        // 2. Mise à jour du stockage local temporaire
-        global.systemState.pompe_etat = nouvelEtatPompe;
-        global.systemState.duree = nouvelleDuree;
-        global.systemState.reset_ap = nouvelEtatResetAP;
-
-        // =========================================================================
-        // 💡 SI TU UTILISES UNE BASE DE DONNÉES : Insère ta ligne de sauvegarde ici !
-        // Tu dois juste ajouter "reset_ap: nouvelEtatResetAP" dans ton objet de mise à jour.
-        // Exemple : await supabase.from('arrosage').update({ pompe_etat: nouvelEtatPompe, duree: nouvelleDuree, reset_ap: nouvelEtatResetAP }).eq('id', 1);
-        // =========================================================================
-
-        return {
-            statusCode: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            body: JSON.stringify({ 
-                status: "success", 
-                message: "Paramètres de la pompe synchronisés avec succès",
-                state: global.systemState 
-            })
-        };
-    } catch (error) {
-        return { 
-            statusCode: 500, 
-            headers: { "Access-Control-Allow-Origin": "*" },
-            body: JSON.stringify({ status: "error", message: error.message }) 
-        };
-    }
+    const sql = neon();
+    
+    // On met à jour ta ligne id = 1 avec toutes les variables nécessaires
+    await sql`UPDATE systeme_arrosage SET pompe_etat = ${nouvelEtatPompe}, duree = ${nouvelleDuree}, reset_ap = ${nouvelEtatResetAP} WHERE id = 1`;
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "État de la pompe, durée et reset_ap mis à jour avec succès" })
+    };
+  } catch (error) {
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  }
 };
