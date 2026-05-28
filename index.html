@@ -247,12 +247,6 @@
             </div>
 
             <div class="card">
-                <h3>📡 Configuration Réseau</h3>
-                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4;">Bascule l'Arduino en mode configuration. Elle créera un WiFi local nommé <b>Arrosage2000_Config</b>.</p>
-                <button class="btn" style="background: #eab308; color: #000;" onclick="configurerNouveauWiFi()">Changer de réseau Wi-Fi</button>
-            </div>
-
-            <div class="card">
                 <h3>Ambiances</h3>
                 <select id="theme-select" class="input-box" onchange="previewTheme()">
                     <option value="theme-cyber">🔵 Cyber Night</option>
@@ -278,6 +272,12 @@
             </div>
             <button class="btn" onclick="saveSettings()">Appliquer les changements</button>
         </main>
+
+        <div id="install-banner" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; background:var(--prim); color:var(--bg); text-align:center; padding:15px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; font-family:sans-serif; font-size:0.9rem; font-weight:bold;">
+            📱 Pour une meilleure expérience :<br>
+            Touchez "Partager" puis <b>"Sur l'écran d'accueil"</b>
+            <button onclick="document.getElementById('install-banner').style.display='none'" style="display:block; width:100%; margin-top:10px; background:rgba(0,0,0,0.2); border:none; color:inherit; padding:8px; border-radius:8px; font-weight:bold; cursor:pointer;">Compris</button>
+        </div>
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="showView('view-home', this)"><span class="icon">🏠</span>Accueil</button>
@@ -485,18 +485,7 @@
         async function sendPump(state, dureeMins = 0) {
             await fetch('/.netlify/functions/update-pump', { 
                 method: 'POST', 
-                body: JSON.stringify({ pompe_etat: state, duree: dureeMins, reset_ap: false }) 
-            });
-        }
-
-        // NOUVEAU : Enclenche le reboot Wi-Fi à distance
-        async function configurerNouveauWiFi() {
-            if(!confirm("Forcer l'Arduino à se déconnecter pour changer de réseau WiFi ?")) return;
-            addLog("📡 Ordre changement WiFi envoyé");
-            showToast("Demande transmise à la carte...");
-            await fetch('/.netlify/functions/update-pump', { 
-                method: 'POST', 
-                body: JSON.stringify({ pompe_etat: false, duree: 0, reset_ap: true }) 
+                body: JSON.stringify({ pompe_etat: state, duree: dureeMins }) 
             });
         }
 
@@ -665,7 +654,7 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); 
         }
 
-        // --- INITIALISATION ---
+        // --- DÉTECTION PWA & INITIALISATION ---
         window.onload = () => {
             const theme = localStorage.getItem('arrosage_theme') || 'theme-cyber';
             document.body.className = theme;
@@ -674,6 +663,16 @@
             document.getElementById('city-search').value = AppState.location.name;
             document.getElementById('notif-toggle').checked = AppState.notifGranted;
             
+            // Logique de détection PWA (Bannière d'installation)
+            const isIos = () => {
+                const userAgent = window.navigator.userAgent.toLowerCase();
+                return /iphone|ipad|ipod/.test(userAgent);
+            };
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (!isStandalone) {
+                document.getElementById('install-banner').style.display = 'block';
+            }
+
             renderLogs();
             renderPlans();
             renderChart();
