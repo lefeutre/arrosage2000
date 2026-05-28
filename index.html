@@ -247,6 +247,12 @@
             </div>
 
             <div class="card">
+                <h3>📡 Configuration Réseau</h3>
+                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4;">Bascule l'Arduino en mode configuration. Elle créera un WiFi local nommé <b>Arrosage2000_Config</b>.</p>
+                <button class="btn" style="background: #eab308; color: #000;" onclick="configurerNouveauWiFi()">Changer de réseau Wi-Fi</button>
+            </div>
+
+            <div class="card">
                 <h3>Ambiances</h3>
                 <select id="theme-select" class="input-box" onchange="previewTheme()">
                     <option value="theme-cyber">🔵 Cyber Night</option>
@@ -284,8 +290,6 @@
     </div>
 
     <script>
-        // --- ÉTAT GLOBAL CORRIGÉ ---
-        // Sécurisation de la vérification des notifications pour éviter les crashs sur mobile
         const isNotifSupported = ('Notification' in window);
         
         const AppState = {
@@ -303,19 +307,17 @@
             notifGranted: isNotifSupported ? Notification.permission === "granted" : false
         };
 
-        // --- NOTIFICATIONS PUSH CORRIGÉES ---
         function toggleNotifications(checkbox) {
             if (!isNotifSupported) {
-                showToast("Votre navigateur ou téléphone ne supporte pas ces notifications.");
+                showToast("Notifications non supportées sur ce mobile.");
                 checkbox.checked = false;
                 return;
             }
-            
             if (checkbox.checked && Notification.permission !== "granted") {
                 Notification.requestPermission().then(permission => {
                     AppState.notifGranted = permission === "granted";
                     checkbox.checked = AppState.notifGranted;
-                    if(AppState.notifGranted) sendPush("Notifications activées", "Le système peut désormais vous alerter.");
+                    if(AppState.notifGranted) sendPush("Notifications activées", "Le système est prêt.");
                 });
             } else {
                 AppState.notifGranted = checkbox.checked;
@@ -328,7 +330,6 @@
             }
         }
 
-        // --- GESTION DU JOURNAL ET CONSO ---
         function addLog(message) {
             const now = new Date();
             const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
@@ -348,7 +349,6 @@
         }
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); }
 
-        // --- GRAPHIQUES ET AUTONOMIE ---
         function renderChart() {
             const cont = document.getElementById('chart-area');
             cont.innerHTML = '';
@@ -393,7 +393,6 @@
             }
         }
 
-        // --- MOTEUR INTELLIGENT ---
         const SmartEngine = {
             async boost(mins, isAuto = false) {
                 if (AppState.isRaining && document.getElementById('rain-toggle').checked) {
@@ -428,7 +427,6 @@
             }
         };
 
-        // --- COMMUNICATION ARDUINO/NETLIFY ---
         async function fetchAll() {
             if (document.hidden) return; 
             
@@ -487,7 +485,18 @@
         async function sendPump(state, dureeMins = 0) {
             await fetch('/.netlify/functions/update-pump', { 
                 method: 'POST', 
-                body: JSON.stringify({ pompe_etat: state, duree: dureeMins }) 
+                body: JSON.stringify({ pompe_etat: state, duree: dureeMins, reset_ap: false }) 
+            });
+        }
+
+        // NOUVEAU : Enclenche le reboot Wi-Fi à distance
+        async function configurerNouveauWiFi() {
+            if(!confirm("Forcer l'Arduino à se déconnecter pour changer de réseau WiFi ?")) return;
+            addLog("📡 Ordre changement WiFi envoyé");
+            showToast("Demande transmise à la carte...");
+            await fetch('/.netlify/functions/update-pump', { 
+                method: 'POST', 
+                body: JSON.stringify({ pompe_etat: false, duree: 0, reset_ap: true }) 
             });
         }
 
@@ -533,27 +542,16 @@
                 let adviceText = "";
                 let adviceColor = "";
                 
-                if (AppState.isRaining) {
-                    adviceText = "Arrosage inutile, précipitations en cours ou prévues.";
-                    adviceColor = "var(--prim)"; 
-                } else if (cur.temperature_2m >= 25) {
-                    adviceText = "Temps très chaud et sec. Un arrosage abondant est recommandé (de préférence le soir).";
-                    adviceColor = "var(--warning)"; 
-                } else if (cur.temperature_2m >= 15) {
-                    adviceText = "Temps sec et clément. Un arrosage régulier est conseillé pour maintenir l'humidité.";
-                    adviceColor = "var(--success)"; 
-                } else if (cur.temperature_2m <= 5) {
-                    adviceText = "Températures proches du gel. Ne surtout pas arroser pour éviter d'endommager les plantes.";
-                    adviceColor = "var(--prim-l)"; 
-                } else {
-                    adviceText = "Temps frais. L'arrosage n'est généralement pas nécessaire sauf en cas de sol très sec.";
-                    adviceColor = "var(--text-dim)"; 
-                }
+                if (AppState.isRaining) { adviceText = "Arrosage inutile, pluie en cours."; adviceColor = "var(--prim)"; }
+                else if (cur.temperature_2m >= 25) { adviceText = "Très chaud. Augmentation automatique de 50% active."; adviceColor = "var(--warning)"; }
+                else if (cur.temperature_2m >= 15) { adviceText = "Climat tempéré. Conditions idéales."; adviceColor = "var(--success)"; }
+                else if (cur.temperature_2m <= 5) { adviceText = "Risque de gel. Protection active."; adviceColor = "var(--prim-l)"; }
+                else { adviceText = "Frais. Arrosage réduit automatiquement de 50%."; adviceColor = "var(--text-dim)"; }
 
                 document.getElementById('w-advice-text').textContent = adviceText;
                 document.getElementById('w-advice-box').style.borderLeftColor = adviceColor;
             } catch(e) {
-                document.getElementById('w-advice-text').textContent = "Données météo indisponibles pour le moment.";
+                document.getElementById('w-advice-text').textContent = "Météo indisponible.";
             }
         }
 
@@ -584,7 +582,7 @@
                                 resultsBox.style.display = 'none';
                                 localStorage.setItem('arrosage_loc', JSON.stringify(AppState.location));
                                 fetchWeather();
-                                showToast("Ville sélectionnée !");
+                                showToast("Ville modifiée !");
                             };
                             resultsBox.appendChild(div);
                         });
@@ -604,20 +602,20 @@
             const duration = document.getElementById('dur-in').value;
             const days = Array.from(document.querySelectorAll('.day-check:checked')).map(c => c.value);
             
-            if(!time || !duration || days.length === 0) return showToast("Veuillez remplir tous les champs !");
+            if(!time || !duration || days.length === 0) return showToast("Formulaire incomplet !");
             
             AppState.schedules.push({ time, duration, days });
             await fetch('/.netlify/functions/update-planning', { method: 'POST', body: JSON.stringify({ planning: AppState.schedules }) });
             localStorage.setItem('arrosage_plan', JSON.stringify(AppState.schedules));
             renderPlans();
-            addLog(`📅 Prog ajouté: ${time} (${days.length}j)`);
-            showToast("Programme sauvegardé !");
+            addLog(`📅 Prog ajouté: ${time}`);
+            showToast("Enregistré !");
         }
 
         function renderPlans() {
             const cont = document.getElementById('plan-list'); cont.innerHTML = "";
             AppState.schedules.forEach((p, i) => {
-                cont.innerHTML += `<div class="list-item" style="animation: slideUp 0.3s ease forwards; animation-delay: ${i * 0.1}s;"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:var(--danger); font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer; transition: transform 0.2s;">✖</button></div>`;
+                cont.innerHTML += `<div class="list-item"><div><b style="font-size:1.1rem; color:var(--text);">${p.time}</b> <span style="color:var(--text-dim);">(${p.duration}m)</span><br><small style="color:var(--prim-l); font-weight:bold;">${p.days.join(' ')}</small></div><button onclick="delPlan(${i})" style="border:none; background:none; color:var(--danger); font-weight:bold; padding:10px; font-size:1.2rem; cursor:pointer;">✖</button></div>`;
             });
         }
 
@@ -642,7 +640,7 @@
             if(m) { AppState.maxVolume = m; localStorage.setItem('max_v', m); document.getElementById('max-txt').textContent = m; }
             localStorage.setItem('arrosage_theme', document.getElementById('theme-select').value);
             document.body.className = document.getElementById('theme-select').value;
-            showToast("Réglages sauvés");
+            showToast("Sauvegardé");
             renderChart(); 
         }
 
@@ -667,7 +665,7 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); 
         }
 
-        // --- INITIALISATION & BOUCLES ---
+        // --- INITIALISATION ---
         window.onload = () => {
             const theme = localStorage.getItem('arrosage_theme') || 'theme-cyber';
             document.body.className = theme;
