@@ -6,24 +6,21 @@ export const handler = async (event) => {
   try {
     const data = JSON.parse(event.body);
     const pompe_etat = data.pompe_etat;
-    
-    // On récupère la durée pour pouvoir la remettre à 0 (évite le bug du rallumage)
-    const duree = data.duree !== undefined ? data.duree : 0;
 
     const sql = neon();
     
-    // On utilise TA requête SQL qui marche partout
     await sql`
       UPDATE systeme_arrosage 
       SET pompe_etat = ${pompe_etat}, 
-          duree = ${duree},
           derniere_mise_a_jour = CURRENT_TIMESTAMP
     `;
 
+    // L'ASTUCE EST LÀ : On écrit littéralement "200 OK" dans le texte
+    // pour que l'Arduino le trouve, valide son envoi et arrête de spammer !
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "Pompe et chrono mis à jour" })
+      body: JSON.stringify({ message: "200 OK Pompe mise à jour" })
     };
   } catch (error) {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
