@@ -305,7 +305,6 @@
             lastTrigger: "",
             syncIntervalId: null,
             notifGranted: isNotifSupported ? Notification.permission === "granted" : false,
-            // NOUVEAU : Le verrou anti-yoyo visuel !
             isUpdatingPump: false 
         };
 
@@ -351,6 +350,39 @@
         }
         function clearLogs() { AppState.logs = []; localStorage.removeItem('sys_logs'); renderLogs(); }
 
+        // --- NOUVEAU : Calcul forcé de l'autonomie indépendamment du graphique ---
+        function updateAutonomyDisplay() {
+            const autoTxt = document.getElementById('autonomy-txt');
+            if (AppState.volume <= 0.2) {
+                autoTxt.textContent = "Autonomie : Cuve Vide";
+                autoTxt.style.color = "#ef4444";
+                return;
+            }
+            
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                dates.push(d.toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit'}));
+            }
+
+            let total = 0; let joursUtilises = 0;
+            dates.forEach(date => {
+                let val = AppState.dailyUsage[date] || 0;
+                if(val > 0) { total += val; joursUtilises++; }
+            });
+            
+            if(joursUtilises === 0) {
+                autoTxt.textContent = "Autonomie : Données insuffisantes";
+                autoTxt.style.color = "var(--text-dim)";
+            } else {
+                let avg = total / joursUtilises;
+                let daysLeft = Math.floor(AppState.volume / avg);
+                autoTxt.textContent = `Autonomie estimée : ~${daysLeft} jour(s)`;
+                autoTxt.style.color = daysLeft <= 1 ? "#ef4444" : "#22c55e";
+            }
+        }
+
         function renderChart() {
             const cont = document.getElementById('chart-area');
             cont.innerHTML = '';
@@ -380,19 +412,7 @@
                 `;
             });
 
-            let total = 0; let joursUtilises = 0;
-            values.forEach(d => { if(d.val > 0) { total += d.val; joursUtilises++; } });
-            
-            const autoTxt = document.getElementById('autonomy-txt');
-            if(joursUtilises === 0 || AppState.volume <= 0.2) {
-                autoTxt.textContent = AppState.volume <= 0.2 ? "Autonomie : Cuve Vide" : "Autonomie : Données insuffisantes";
-                autoTxt.style.color = "var(--text-dim)";
-            } else {
-                let avg = total / joursUtilises;
-                let daysLeft = Math.floor(AppState.volume / avg);
-                autoTxt.textContent = `Autonomie estimée : ~${daysLeft} jour(s)`;
-                autoTxt.style.color = daysLeft <= 1 ? "#ef4444" : "var(--success)";
-            }
+            updateAutonomyDisplay();
         }
 
         const SmartEngine = {
@@ -433,7 +453,6 @@
             if (document.hidden) return; 
             
             try {
-                // L'arme anti-cache Netlify est ajoutée ici aussi ! (?t= timestamp)
                 const res = await fetch('/.netlify/functions/get-status?t=' + new Date().getTime());
                 const data = await res.json();
                 
@@ -448,6 +467,9 @@
                 AppState.lastRecordedVolume = newVol;
                 AppState.volume = newVol;
 
+                // On force le recalcul immédiat de l'autonomie dès que la BDD répond
+                updateAutonomyDisplay();
+
                 const pct = (AppState.volume / AppState.maxVolume) * 100;
                 document.getElementById('water-level').style.height = Math.min(pct, 100) + "%";
                 
@@ -460,7 +482,6 @@
                     txt.style.color = "inherit";
                 }
 
-                // CORRECTION : On met à jour l'affichage UNIQUEMENT si le doigt n'a pas appuyé sur le bouton
                 if (!AppState.isUpdatingPump) {
                     document.getElementById('pump-toggle').checked = data.pompe_etat;
                     updateThemeLabels(document.body.className, data.pompe_etat);
@@ -489,22 +510,16 @@
         }
 
         async function sendPump(state, dureeMins = 0) {
-            // VERROU ACTIVÉ AU CLIC
             AppState.isUpdatingPump = true;
-            
             try {
                 await fetch('/.netlify/functions/update-pump', { 
                     method: 'POST', 
                     body: JSON.stringify({ pompe_etat: state, duree: dureeMins }) 
                 });
             } catch(e) {
-                console.error("Erreur d'envoi réseau", e);
+                console.error("Erreur réseau envoi", e);
             }
-            
-            // On relâche le bouton 2 secondes plus tard, le temps que la base de données soit sûre
-            setTimeout(() => {
-                AppState.isUpdatingPump = false;
-            }, 2000);
+            setTimeout(() => { AppState.isUpdatingPump = false; }, 2000);
         }
 
         document.getElementById('pump-toggle').onchange = (e) => {
@@ -681,7 +696,6 @@
             document.getElementById('city-search').value = AppState.location.name;
             document.getElementById('notif-toggle').checked = AppState.notifGranted;
             
-            // Logique de détection PWA (Bannière d'installation)
             const isIos = () => {
                 const userAgent = window.navigator.userAgent.toLowerCase();
                 return /iphone|ipad|ipod/.test(userAgent);
