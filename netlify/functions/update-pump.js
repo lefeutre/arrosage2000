@@ -9,14 +9,19 @@ export const handler = async (event) => {
     const data = JSON.parse(event.body);
     const nouvelEtatPompe = data.pompe_etat; 
     const nouvelEtatResetAP = data.reset_ap !== undefined ? data.reset_ap : false;
-    
-    // LA CORRECTION EST LÀ : On récupère la durée envoyée par l'Arduino
     const nouvelleDuree = data.duree !== undefined ? data.duree : 0;
 
     const sql = neon();
     
-    // ET LÀ : On l'efface pour de vrai dans la base de données !
-    await sql`UPDATE systeme_arrosage SET pompe_etat = ${nouvelEtatPompe}, reset_ap = ${nouvelEtatResetAP}, duree = ${nouvelleDuree} WHERE id = 1`;
+    // CORRECTION VISÉE : On cible dynamiquement la dernière ligne de la table
+    // au lieu de chercher un ID informatique précis qui a pu changer.
+    await sql`
+      UPDATE systeme_arrosage 
+      SET pompe_etat = ${nouvelEtatPompe}, 
+          reset_ap = ${nouvelEtatResetAP}, 
+          duree = ${nouvelleDuree} 
+      WHERE id = (SELECT id FROM systeme_arrosage ORDER BY id DESC LIMIT 1)
+    `;
     
     return {
       statusCode: 200,
