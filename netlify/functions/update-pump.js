@@ -1,24 +1,26 @@
 import { neon } from '@netlify/neon';
 
 export const handler = async (event) => {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Méthode non autorisée' };
+  }
 
   try {
     const data = JSON.parse(event.body);
-    const pompe_etat = data.pompe_etat;
+    const nouvelEtatPompe = data.pompe_etat; 
+    const nouvelEtatResetAP = data.reset_ap !== undefined ? data.reset_ap : false;
+    
+    // LA CORRECTION EST LÀ : On récupère la durée envoyée par l'Arduino
+    const nouvelleDuree = data.duree !== undefined ? data.duree : 0;
 
     const sql = neon();
     
-    await sql`
-      UPDATE systeme_arrosage 
-      SET pompe_etat = ${pompe_etat}, 
-          derniere_mise_a_jour = CURRENT_TIMESTAMP
-    `;
-
+    // ET LÀ : On l'efface pour de vrai dans la base de données !
+    await sql`UPDATE systeme_arrosage SET pompe_etat = ${nouvelEtatPompe}, reset_ap = ${nouvelEtatResetAP}, duree = ${nouvelleDuree} WHERE id = 1`;
+    
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "Pompe mise à jour" })
+      body: JSON.stringify({ message: "État mis à jour avec succès" })
     };
   } catch (error) {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
