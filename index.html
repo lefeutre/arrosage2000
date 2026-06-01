@@ -304,7 +304,9 @@
             dailyUsage: JSON.parse(localStorage.getItem('sys_usage')) || {},
             lastTrigger: "",
             syncIntervalId: null,
-            notifGranted: isNotifSupported ? Notification.permission === "granted" : false
+            notifGranted: isNotifSupported ? Notification.permission === "granted" : false,
+            // NOUVEAU : Le verrou anti-yoyo visuel !
+            isUpdatingPump: false 
         };
 
         function toggleNotifications(checkbox) {
@@ -431,7 +433,8 @@
             if (document.hidden) return; 
             
             try {
-                const res = await fetch('/.netlify/functions/get-status');
+                // L'arme anti-cache Netlify est ajoutée ici aussi ! (?t= timestamp)
+                const res = await fetch('/.netlify/functions/get-status?t=' + new Date().getTime());
                 const data = await res.json();
                 
                 let newVol = parseFloat(data.volume_eau);
@@ -457,15 +460,18 @@
                     txt.style.color = "inherit";
                 }
 
-                document.getElementById('pump-toggle').checked = data.pompe_etat;
-                updateThemeLabels(document.body.className, data.pompe_etat);
-                
-                if (!data.pompe_etat) {
-                    document.getElementById('active-banner').style.display = 'none';
-                    document.getElementById('stop-btn').style.display = 'none';
-                } else {
-                    document.getElementById('active-banner').style.display = 'block';
-                    document.getElementById('stop-btn').style.display = 'block';
+                // CORRECTION : On met à jour l'affichage UNIQUEMENT si le doigt n'a pas appuyé sur le bouton
+                if (!AppState.isUpdatingPump) {
+                    document.getElementById('pump-toggle').checked = data.pompe_etat;
+                    updateThemeLabels(document.body.className, data.pompe_etat);
+                    
+                    if (!data.pompe_etat) {
+                        document.getElementById('active-banner').style.display = 'none';
+                        document.getElementById('stop-btn').style.display = 'none';
+                    } else {
+                        document.getElementById('active-banner').style.display = 'block';
+                        document.getElementById('stop-btn').style.display = 'block';
+                    }
                 }
 
                 if (JSON.stringify(data.planning) !== JSON.stringify(AppState.schedules)) {
@@ -483,10 +489,22 @@
         }
 
         async function sendPump(state, dureeMins = 0) {
-            await fetch('/.netlify/functions/update-pump', { 
-                method: 'POST', 
-                body: JSON.stringify({ pompe_etat: state, duree: dureeMins }) 
-            });
+            // VERROU ACTIVÉ AU CLIC
+            AppState.isUpdatingPump = true;
+            
+            try {
+                await fetch('/.netlify/functions/update-pump', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ pompe_etat: state, duree: dureeMins }) 
+                });
+            } catch(e) {
+                console.error("Erreur d'envoi réseau", e);
+            }
+            
+            // On relâche le bouton 2 secondes plus tard, le temps que la base de données soit sûre
+            setTimeout(() => {
+                AppState.isUpdatingPump = false;
+            }, 2000);
         }
 
         document.getElementById('pump-toggle').onchange = (e) => {
